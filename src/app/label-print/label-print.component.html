@@ -1,0 +1,188 @@
+<section class="lp-shell">
+
+  <!-- Hero Banner -->
+  <div class="lp-hero">
+    <div class="hero-content">
+      <p class="eyebrow">Operations</p>
+      <h2>Label Print</h2>
+      <p class="hero-copy">Configure the printer, choose how many labels to reserve and print, and preview the physical 90&times;44mm label.</p>
+    </div>
+  </div>
+
+  <div class="lp-grid">
+
+    <!-- ===================== Printer Settings (collapsible) ===================== -->
+    <div class="lp-card">
+      <button type="button" class="card-head card-head--toggle" (click)="toggleSettings()">
+        <h3 class="panel-title"><i class="fa fa-cog mr-2"></i>Printer Settings</h3>
+        <i class="fa toggle-arrow" [class.fa-chevron-up]="settingsExpanded" [class.fa-chevron-down]="!settingsExpanded"></i>
+      </button>
+
+      <div class="card-body" *ngIf="settingsExpanded">
+
+        <div class="field-row">
+          <label>Printer</label>
+          <div class="field-with-btn">
+            <select class="printer-select" [(ngModel)]="selectedPrinter" (ngModelChange)="onPrinterChange()"
+              [class.field-invalid]="fieldErrors.printer">
+              <option [ngValue]="null">&mdash; Select printer &mdash;</option>
+              <option *ngFor="let p of availablePrinters" [value]="p.name">
+                {{ p.name }}{{ p.isDefault ? ' (default)' : '' }}{{ p.status === 'offline' ? ' — offline' : '' }}
+              </option>
+            </select>
+            <button class="lp-btn lp-btn--outline" (click)="detectPrinters()" [disabled]="isDetectingPrinters">
+              <i class="fa mr-1" [class.fa-spinner]="isDetectingPrinters" [class.fa-spin]="isDetectingPrinters" [class.fa-search]="!isDetectingPrinters"></i>
+              {{ isDetectingPrinters ? 'Detecting...' : 'Detect' }}
+            </button>
+          </div>
+          <span class="field-error" *ngIf="fieldErrors.printer">{{ fieldErrors.printer }}</span>
+          <span class="field-hint field-hint--error" *ngIf="printerDetectionError && !fieldErrors.printer">{{ printerDetectionError }}</span>
+          <span class="field-hint" *ngIf="!printerDetectionError && availablePrinters.length > 0">{{ availablePrinters.length }} printer(s) available</span>
+        </div>
+
+        <div class="field-row">
+          <label>MFG Date</label>
+          <input type="date" [(ngModel)]="mfgDate" [class.field-invalid]="fieldErrors.mfgDate">
+          <span class="field-error" *ngIf="fieldErrors.mfgDate">{{ fieldErrors.mfgDate }}</span>
+        </div>
+
+        <div class="field-row">
+          <label>Density <span class="field-value">{{ density }}</span></label>
+          <input type="range" [min]="densityMin" [max]="densityMax" step="1" [(ngModel)]="density" (ngModelChange)="onSettingChange()">
+          <div class="range-bounds"><span>{{ densityMin }}</span><span>{{ densityMax }}</span></div>
+          <span class="field-error" *ngIf="fieldErrors.density">{{ fieldErrors.density }}</span>
+        </div>
+
+        <div class="field-row">
+          <label>Speed <span class="field-value">{{ speed }}</span></label>
+          <input type="range" [min]="speedMin" [max]="speedMax" step="1" [(ngModel)]="speed" (ngModelChange)="onSettingChange()">
+          <div class="range-bounds"><span>{{ speedMin }}</span><span>{{ speedMax }}</span></div>
+          <span class="field-error" *ngIf="fieldErrors.speed">{{ fieldErrors.speed }}</span>
+        </div>
+
+        <div class="field-grid field-grid--2">
+          <div class="field-row">
+            <label>Gap (MM)</label>
+            <input type="number" min="0" step="0.5" [(ngModel)]="gapMm" (ngModelChange)="onSettingChange()" [class.field-invalid]="fieldErrors.gap">
+            <span class="field-error" *ngIf="fieldErrors.gap">{{ fieldErrors.gap }}</span>
+          </div>
+          <div class="field-row">
+            <label>Offset (MM)</label>
+            <input type="number" step="0.5" [(ngModel)]="offsetMm" (ngModelChange)="onSettingChange()" [class.field-invalid]="fieldErrors.offset">
+            <span class="field-error" *ngIf="fieldErrors.offset">{{ fieldErrors.offset }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== Label Preview (true-size, real layout) ===================== -->
+    <div class="lp-card">
+      <div class="card-head">
+        <h3 class="panel-title"><i class="fa fa-tag mr-2"></i>Label Preview</h3>
+        <span class="preview-note" *ngIf="!isReserved">Not reserved yet</span>
+      </div>
+      <div class="card-body preview-body">
+        <div class="label-stage">
+          <div class="label-face" [style.aspect-ratio]="labelAspectRatio">
+            <div class="label-face-grid" [style.grid-template-columns]="labelGridColumns" [style.transform]="previewOffsetTransform">
+
+              <!-- Left: Brand / Manufacturer (fixed) -->
+              <div class="label-section label-section--brand">
+                <p class="brand-name">{{ template.brandName }}</p>
+                <p class="brand-tagline">{{ template.tagline }}</p>
+                <div class="brand-manufacturer" *ngIf="template.manufacturerName">
+                  <p>{{ template.manufacturerName }}</p>
+                </div>
+              </div>
+
+              <!-- Center: dynamic label data -->
+              <div class="label-section label-section--product" [class.debug-printable-area]="debugPrintableArea">
+                <ng-container *ngIf="productContext as it">
+                  <p class="prod-name">{{ it.productName }}</p>
+                  <p class="prod-line" *ngIf="it.styleNo">STYLE NO: {{ it.styleNo }}</p>
+                  <p class="prod-row" *ngIf="it.size || it.color">
+                    <span *ngIf="it.size">SIZE: {{ it.size }}</span>
+                    <span *ngIf="it.color">COLOR: {{ it.color }}</span>
+                  </p>
+                  <p class="prod-mrp" *ngIf="it.mrp">MRP: &#8377;{{ it.mrp }}</p>
+                </ng-container>
+
+                <div class="prod-qr-row">
+                  <img *ngIf="previewQrDataUrl" class="prod-qr" [src]="previewQrDataUrl" alt="QR Code">
+                  <div class="prod-qr-number">
+                    <span class="prod-qr-caption">LABEL NO</span>
+                    <span class="prod-qr-value">{{ previewLabel?.labelNumber || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Hologram / security strip (fixed) -->
+              <div class="label-section label-section--hologram">
+                <div class="hologram-artwork" *ngIf="template.hologramEnabled">
+                  <span class="hologram-text">SECURITY&nbsp;&bull;&nbsp;HOLOGRAM</span>
+                </div>
+                <div class="hologram-disabled" *ngIf="!template.hologramEnabled"></div>
+              </div>
+
+            </div>
+          </div>
+          <p class="stage-caption">{{ labelWidthMM }}mm &times; {{ labelHeightMM }}mm</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== Label Quantity ===================== -->
+    <div class="lp-card lp-card--wide">
+      <div class="card-head">
+        <h3 class="panel-title"><i class="fa fa-sliders mr-2"></i>Label Quantity</h3>
+        <span class="status-badge" [ngClass]="'status-badge--' + batchStatus.toLowerCase()">{{ batchStatus }}</span>
+      </div>
+      <div class="card-body">
+        <div class="field-grid field-grid--2">
+          <div class="field-row">
+            <label>Label Count</label>
+            <input type="number" min="1" [max]="maxLabelCount" [(ngModel)]="labelCount"
+              (ngModelChange)="onLabelCountChange()" [disabled]="isReserved">
+            <span class="field-hint" *ngIf="isReserved">Cancel the current batch to change this</span>
+          </div>
+          <div class="field-row">
+            <label>Copies (per Label)</label>
+            <input type="number" min="1" [max]="maxCopies" [(ngModel)]="copies" (ngModelChange)="onCopiesChange()">
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <span class="stat-chip"><i class="fa fa-tags mr-1"></i>Unique Labels: <strong>{{ labelCount }}</strong></span>
+          <span class="stat-chip"><i class="fa fa-copy mr-1"></i>Copies per Label: <strong>{{ copies }}</strong></span>
+          <span class="stat-chip stat-chip--accent"><i class="fa fa-print mr-1"></i>Total Physical Prints: <strong>{{ totalPhysicalPrints }}</strong></span>
+        </div>
+
+        <div class="alert-msg alert-msg--error" *ngIf="printError">
+          <i class="fa fa-exclamation-triangle mr-2"></i>{{ printError }}
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== Actions ===================== -->
+    <div class="lp-card lp-card--wide">
+      <div class="card-body action-bar">
+        <button class="lp-btn lp-btn--outline" (click)="preview()" [disabled]="batchStatus === 'Reserving' || batchStatus === 'Printing'">
+          <i class="fa fa-eye mr-1"></i>Preview
+        </button>
+        <div class="action-bar-right">
+          <button class="lp-btn lp-btn--outline" (click)="cancel()" [disabled]="batchStatus === 'Reserving' || batchStatus === 'Printing'">
+            <i class="fa fa-ban mr-1"></i>Cancel
+          </button>
+          <button class="lp-btn lp-btn--solid" *ngIf="batchStatus !== 'Failed'" (click)="print()"
+            [disabled]="!isReserved || batchStatus === 'Reserving' || batchStatus === 'Printing' || batchStatus === 'Printed'">
+            <i class="fa fa-print mr-1"></i>{{ batchStatus === 'Printed' ? 'Printed' : 'Print' }}
+          </button>
+          <button class="lp-btn lp-btn--solid" *ngIf="batchStatus === 'Failed'" (click)="retry()">
+            <i class="fa fa-refresh mr-1"></i>Retry
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

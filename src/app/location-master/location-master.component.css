@@ -1,0 +1,271 @@
+* {
+    font-variant: small-caps !important;
+}
+
+label {
+    font-weight: bold;
+    color: #018DB0;
+}
+
+input, select.form-control {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.button {
+    position: relative;
+    overflow: hidden;
+    padding: 0 2rem;
+    border-radius: 30px;
+    background: #018DB0;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.button-content {
+    position: relative;
+    z-index: 1;
+    font-variant: small-caps;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.button-content i {
+    font-style: normal;
+}
+
+.view-toggle {
+    opacity: 0.55;
+}
+
+.view-toggle-active {
+    opacity: 1;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0px;
+    right: 0;
+    height: 100%;
+    width: 25%;
+    background: #e6e6e6;
+    z-index: 100;
+    transition: all 0.5s ease;
+    border-left: 2px solid #018DB0;
+    border-bottom: 2px solid #018DB0;
+}
+
+.sidebar.close {
+    width: 0px;
+}
+
+.page_height {
+    background-color: white;
+    height: 80vh;
+    border-radius: 6px;
+}
+
+.fa {
+    font-size: 1.3rem;
+    color: #326789;
+}
+
+.td-action {
+    display: flex;
+    column-gap: 10px;
+    justify-content: center;
+}
+
+.table-container {
+    max-width: 100%;
+    overflow-x: auto !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.no-records-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+table {
+    width: 100%;
+}
+
+th,
+td {
+    white-space: nowrap;
+}
+
+.fixed-header th {
+    background: #326789;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.fixed-header th,
+.fixed-header td {
+    padding: 10px;
+}
+
+.col-sno {
+    min-width: 50px;
+}
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px !important;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background-color: #326789 !important;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1 !important;
+}
+
+.total_records {
+    font-size: 1.2rem;
+    color: #018DB0;
+}
+
+.manual-pager .btn-page {
+    border: none;
+    background: #326789;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.manual-pager .btn-page:disabled {
+    background: #9a9999;
+    cursor: not-allowed;
+}
+
+.gk-section {
+    display: flex;
+    flex-direction: column;
+    height: 80vh !important;
+}
+
+.gk-container {
+    height: 100%;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    padding-bottom: 10px !important;
+    margin: 0px !important;
+}
+
+.gk-table-container {
+    height: calc(100% - 60px);
+}
+
+.gk-h100p {
+    height: 100%;
+}
+
+.form-group label {
+    font-size: 1.8vh !important;
+    padding: 1vh 0.4vw !important;
+    margin: 0px;
+}
+
+.form-group input {
+    min-height: 4vh !important;
+    max-height: 4vh !important;
+    font-size: 1.8vh !important;
+}
+
+.sidebar-head {
+    font-size: 2.5vh !important;
+}
+
+table td {
+    font-size: 1.9vh !important;
+}
+
+/* ---- Status badges ---- */
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 1.4vh;
+    color: #fff;
+}
+
+.status-available {
+    background-color: #28a745;
+}
+
+.status-occupied {
+    background-color: #6c757d;
+}
+
+.status-blocked {
+    background-color: #dc3545;
+}
+
+.status-inactive {
+    background-color: #9a9999;
+}
+
+/* ---- Manage Structure panels ---- */
+.structure-row {
+    height: 100%;
+}
+
+.structure-panel {
+    height: 100%;
+    border-right: 1px solid #dee2e6;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.structure-panel h5 {
+    color: #018DB0;
+    font-weight: 700;
+    margin: 0;
+}
+
+.structure-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.structure-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.structure-list li.no-click {
+    cursor: default;
+}
+
+.structure-list li.active {
+    background-color: #e6f7fb;
+    border-left: 3px solid #018DB0;
+}
+
+.structure-actions {
+    display: flex;
+    align-items: center;
+    column-gap: 10px;
+}

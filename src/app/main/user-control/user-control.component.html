@@ -1,0 +1,397 @@
+<section>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 p-0" style="background-color: #018DB0;">
+        <ul class="nav nav-pills">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="pill" href="#parentTab">User Control</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="pill" href="#parentTab2">Change Password</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="pill" href="#parentTab3">Device Management</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row page_height mx-1 my-2">
+      <div class="col-12">
+        <div class="tab-content">
+          <div id="parentTab" class="tab-pane fade show active">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-lg-12 col-md-12 mt-2 p-0">
+                  <div class="nav user_user">
+                    <a class="user_group nav-link active" data-toggle="pill" (click)="get_usergrp()"
+                      href="#childrenTab">User Group <span style="color: white !important;"><i class="fa fa-check"
+                          aria-hidden="true"></i></span></a>
+                    <a class="user_management nav-link" data-toggle="pill" href="#childrenTab2"
+                      (click)="get_Userlist()">User Management <span style="color: white !important;"><i
+                          class="fa fa-check" aria-hidden="true"></i></span></a>
+                  </div>
+
+                </div>
+                <div *ngIf="linectrl" class="d-flex justify-content-start col-lg-12 col-md-12 w-100"
+                  [formGroup]="userGroupForm">
+                  <div class="d-flex w-50 my-2 align-items-center justify-content-start ">
+                    <label class="label_user mr-0 mt-1" for="text">Group Name &nbsp;&nbsp;&nbsp; </label>
+                    <input #focusGrp type="text" formControlName="group_name" placeholder="Group Name"
+                      class="form-control w-50" [class.is-invalid]="groupSubmitted && f['group_name'].invalid">
+                    <div *ngIf="groupSubmitted && f['group_name'].errors" class="invalid-feedback">
+                      <div *ngIf="f['group_name'].errors['required']">User Group is required</div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex mt-4 justify-content-center align-items-end">
+                    <div class="form-group d-flex justify-content-end align-items-end ml-4 mb-4">
+                      <button class="button d-flex justify-content-center align-items-center" type="button"
+                        (click)="submitGroup()">
+                        <span class="button-content  spaceForBtn" aria-hidden="true">{{groupId == '' ? 'Submit' :
+                          'Edit'}}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="d-flex mt-4 justify-content-end align-items-end">
+                    <div class="form-group d-flex justify-content-end align-items-end ml-4 mb-4">
+                      <button class="button d-flex justify-content-center align-items-center" type="button"
+                        (click)="clearGroup()">
+                        <span class="button-content spaceForBtn" aria-hidden="true">Clear</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tab-content">
+              <div id="childrenTab" class="tab-pane fade show active">
+                <section>
+                  <div class="container-fluid">
+                    <div class="row">
+                      <div class="col-12 p-0">
+                        <!-- <div class="d-flex" [formGroup]="userGroupForm">
+                          <div style="width: 20%;">
+                            <label class="label_user pb-1" for="text">Group Name</label>
+                            <input #focusGrp type="text" formControlName="group_name" placeholder="Group Name"
+                              class="form-control" [class.is-invalid]="groupSubmitted && f['group_name'].invalid">
+                            <div *ngIf="groupSubmitted && f['group_name'].errors" class="invalid-feedback">
+                              <div *ngIf="f['group_name'].errors['required']">User Group is required</div>
+                            </div>
+                          </div>
+
+                          <div class="d-flex justify-content-end align-items-end">
+                            <div class="form-group d-flex justify-content-end align-items-end ml-4 mt-4">
+                              <button class="button" type="button" (click)="submitGroup()">
+                                <span class="button-content" aria-hidden="true">{{groupId == '' ? 'Submit' :
+                                  'Edit'}}</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div class="d-flex justify-content-end align-items-end">
+                            <div class="form-group d-flex justify-content-end align-items-end ml-4 mt-4">
+                              <button class="button" type="button" (click)="clearGroup()">
+                                <span class="button-content" aria-hidden="true">Clear</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div> -->
+
+                        <div class="table-container"
+                          [ngStyle]="{ 'border': userGroupList.length == 0 ? '2px solid #dee2e6' : 'none' }">
+                          <table class="table table-bordered table-striped part_table">
+                            <!-- <tbody *ngIf="tableData.length != 0"></tbody> -->
+                            <thead class="fixed-header">
+                              <tr style="width: 100%;">
+                                <th class="col-sno">S.No</th>
+                                <th>Group Name</th>
+                                <th class="col-action">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let item of userGroupList;let i = index;">
+                                <td>{{i+1}}</td>
+                                <td>{{item.groupname ? item.groupname : 'N/A'}}</td>
+                                <td class="text-center d-flex justify-content-around align-items-center">
+                                  <div class="td-action d-flex justify-content-between">
+                                    <img class="access_icon pointer " data-toggle="modal" data-target="#accessPopup"
+                                      (click)="showAccessModal(item)" src="../../../assets/images/access.png" />
+                                    <i class='fa fa-edit pointer group_edit justify-content-center align-items-center d-flex'
+                                      (click)="openEditGrp(item); focusInput()" aria-hidden="true"></i>
+                                    <div class="checkbox justify-content-center align-items-center d-flex">
+                                      <input id="cbx{{item.Id}}" class="cbx"
+                                        (click)="activeInactiveGroup(item.Id,item.Status)" type="checkbox"
+                                        [checked]="item.Status">
+                                      <label class="toggle" for="cbx{{item.Id}}"><span></span></label>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div class="no-records-message" *ngIf="userGroupList.length == 0">
+                            <div>
+                              <p class="no_records">No Records Found</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="justify-content-start align-items-center d-flex">
+                          <p class="total_records mb-0 mt-4">
+                            Total Number of Records :
+                            <span>
+                              {{userGroupList.length}}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <div id="childrenTab2" class="tab-pane fade">
+                <section>
+                  <div class="container-fluid">
+                    <div class="row">
+                      <div class="col-12">
+                        <div class="d-flex mt-2 justify-content-between" [formGroup]="userForm">
+                          <div>
+                            <label class="label_user" for="text">User Name</label>
+                            <input type="text" formControlName="user_name" placeholder="User Name" class="form-control"
+                              [ngClass]="{ 'is-invalid': userSubmitted && u['user_name'].errors }">
+                            <div *ngIf="userSubmitted && u['user_name'].errors" class="invalid-feedback">
+                              <div *ngIf="u['user_name'].errors['required']">User Name is
+                                required</div>
+                            </div>
+                          </div>
+                          <div style="width:20%;padding: 0rem 1rem;">
+                            <label class="label_user pb-1" for="text">Password</label>
+                            <div class="pass_div">
+                              <input type="{{ showPassword ? 'text' : 'password' }}" formControlName="password"
+                                placeholder="Password" class="form-control"
+                                [ngClass]="{ 'is-invalid': userSubmitted && u['password'].errors }">
+
+                              <i class="fa fa-eye setpos" (mousedown)="showPassword = true"
+                                (mouseup)="showPassword = false" (mouseleave)="showPassword = false"
+                                [class.fa-eye-slash]="showPassword" [class.fa-eye]="!showPassword"
+                                aria-hidden="true"></i>
+                            </div>
+                            <div class="error-message" *ngIf="userForm.get('password').errors?.['pattern'] && userForm.get('password').touched">
+                                Set a strong password
+                            </div>
+
+                            <div *ngIf="userSubmitted && u['password'].errors" class="invalid-feedback"
+                              style="display: block;">
+                              <div *ngIf="u['password'].errors['required']">Password is
+                                required</div>
+                            </div>
+                          </div>
+                          <!-- <div style="width:20%;padding: 0rem 1rem;">
+                            <label class="label_user pb-1" for="text">User Mail Id</label>
+                            <input type="text" formControlName="email" placeholder="Mail Id" class="form-control"
+                              [ngClass]="{ 'is-invalid': userSubmitted && u['email'].errors }" email>
+                            <div *ngIf="userSubmitted && u['email'].errors" class="invalid-feedback">
+                              <div *ngIf="u['email'].errors['required']">User Mail is required</div>
+                              <div *ngIf="u['email'].errors['email']">Invalid email format</div>
+                            </div>
+                          </div> -->
+
+
+
+                          <div style="width:20%;padding: 0rem 1rem;">
+                            <label class="label_user pb-1" for="text">User Group</label>
+                            <select class="form-control" formControlName="usergroup">
+                              <option *ngFor="let item of userGroupList" [value]="item.groupname">
+                                {{item.groupname}}
+                              </option>
+                            </select>
+                            <div *ngIf="userSubmitted && u['usergroup'].errors" class="invalid-feedback">
+                              <div *ngIf="u['usergroup'].errors['required']">User Group is
+                                required</div>
+                            </div>
+                          </div>
+                          <div class="d-flex justify-content-end align-items-end">
+                            <div class="form-group d-flex justify-content-end align-items-end ml-4 mt-4">
+                              <button class="button  " type="button" (click)="submitUser()">
+                                <span class="button-content" aria-hidden="true">{{userId == '' ? 'Submit' :
+                                  'Edit'}}</span>
+                              </button>
+                            </div>
+                          </div>
+                          <div style="width:10%;" class="d-flex justify-content-end align-items-end">
+                            <div class="form-group d-flex justify-content-end align-items-end ml-4 mt-4">
+                              <button class="button" type="button" (click)="clearuser()">
+                                <span class="button-content" aria-hidden="true">Clear</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="table-container"
+                          [ngStyle]="{ 'border': userManagementList.length == 0 ? '2px solid #dee2e6' : 'none' }">
+                          <table class="table table-bordered table-striped part_table">
+                            <!-- <tbody *ngIf="tableData.length != 0"></tbody> -->
+                            <thead class="fixed-header">
+                              <tr style="width: 100%;">
+                                <th class="col-sno">S.No</th>
+                                <th>User Name</th>
+                                <th class="col-action">User Group</th>
+                                <th class="col-action">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let item of userManagementList;let i = index;">
+                                <td>{{i+1}}</td>
+                                <td>{{item.UserName}}</td>
+                                <td>{{item.UserGroup}}  </td>
+                                <td>
+                                  <div class="td-action">
+                                    <i class='fa fa-edit pointer px-4 justify-content-center align-items-center d-flex'
+                                      (click)="openUserEdit(item)" aria-hidden="true"></i>
+
+                                    <!-- (click)="item.Status ? openUserEdit(item) : inactiveUserManagement()"  -->
+
+
+                                    <!-- <div class="checkbox justify-content-center align-items-center d-flex">
+                                      <input id="cbxuser{{item.id}}" class="cbx"
+                                        (click)="activeInactiveUser(item.id,item.Status)" type="checkbox"
+                                        [checked]="item.Status">
+                                      <label class="toggle" for="cbxuser{{item.id}}"><span></span></label>
+                                    </div> -->
+                                  </div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <div class="no-records-message" *ngIf="userManagementList.length == 0">
+                            <div>
+                              <p class="no_records">No Records Found</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="justify-content-start align-items-center d-flex">
+                          <p class="total_records mb-0 mt-4">
+                            Total Number of Records :
+                            <span>
+                              {{userGroupList.length}}
+                            </span>
+                            <br/>
+                            <span>Note :Password should contain at least one lowercase letter, number, special character, and have a minimum length of 6 characters.</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <div id="parentTab2" class="tab-pane fade">
+            <app-change-password></app-change-password>
+          </div>
+
+          <div id="parentTab3" class="tab-pane fade">
+            <app-hht-device-rights></app-hht-device-rights>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+
+
+
+
+
+<div class="modal pl-0" id="myModal" [ngStyle]="{'display':displayAccessPopup}">
+  <div *ngIf="flagset" class="dialog_scrim" (click)="falseSet(); close()">
+  </div>
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content p-2">
+      <section>
+
+        <div class="row">
+          <div class="col-11">
+            <p class="previllages-head my-3">User Group Previleges</p>
+          </div>
+          <div class="col-1 d-flex justify-content-end">
+            <button class="button close-icon" (click)="close()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+        <div class="table-container2 modal_table ">
+
+
+          <table class="table table-bordered mb-0 part_table" id="exportdata">
+            <thead>
+              <tr>
+                <th class="col-2">Module</th>
+                <th class="col-1">View</th>
+                <th class="col-1">Export</th>
+                <th class="col-1">Add</th>
+                <th class="col-1">Update</th>
+                <th class="col-1">Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let item1 of menuList; let i = index">
+                <ng-container>
+                  <tr style="background-color: #018DB0; width: 100%;">
+                    <td class="justify-content-between" colspan="6">
+                      <div class="row">
+                        <div class="col-6">
+                          <span class="sub_menu">{{ item1.module }} </span>
+                        </div>
+                        <div class="col-6 d-flex justify-content-end">
+                          <label class="sub_menu pr-3">Select All</label>
+                          <span>
+                            <input type="checkbox" (click)="markAllCheck($event, item1)" />
+                          </span>
+                        </div>
+                      </div>
+                      <!-- <span>ABC</span>
+                      <span>DEF</span> -->
+                    </td>
+                  </tr>
+                </ng-container>
+
+                <tr *ngFor="let item of item1.sub_module; let j = index">
+                  <td>{{ item.sub_module }}</td>
+                  <td class="text-center"><input *ngIf="item.lists" type="checkbox" id="checkbox_{{i}}_{{j}}_list"
+                      (click)="selectRights($event, item.pattern +'_list')" [checked]=item.list_checked>
+                  </td>
+                  <td class="text-center"><input *ngIf="item.exports" type="checkbox" id="checkbox_{{i}}_{{j}}_exports"
+                      (click)="selectRights($event, item.pattern +'_exports')" [checked]=item.export_checked></td>
+                  <td class="text-center"><input *ngIf="item.creates" type="checkbox" id="checkbox_{{i}}_{{j}}_creates"
+                      (click)="selectRights($event, item.pattern +'_creates')" [checked]=item.create_checked></td>
+                  <td class="text-center"><input *ngIf="item.modifies" type="checkbox"
+                      id="checkbox_{{i}}_{{j}}_modifies" (click)="selectRights($event, item.pattern +'_modifies')"
+                      [checked]=item.modify_checked></td>
+                  <td class="text-center"><input *ngIf="item.deletes" type="checkbox" id="checkbox_{{i}}_{{j}}_deletes"
+                      (click)="selectRights($event, item.pattern +'_deletes')" [checked]=item.delete_checked></td>
+                </tr>
+              </ng-container>
+
+            </tbody>
+          </table>
+
+        </div>
+
+        <div class="row">
+          <div class="col-12 justify-content-end align-items-center d-flex">
+            <div class="p-2 mr-4">
+              <button class="button " (click)="submitAccess()"><span (click)="submitAccess()"
+                  class="button-content">Submit</span></button>
+              <button class="button ml-3" (click)="clearRights()"><span class="button-content">Clear</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

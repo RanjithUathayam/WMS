@@ -1,0 +1,27 @@
+/*--header& nav--*/
+.top-bar {
+    background: #fff;
+    font-variant: small-caps;
+}
+
+.logo {
+    background-color: #fff !important;
+}
+
+.top-bar h5 {
+    color: #018DB0;
+    font-weight: 600;
+    font-size: 18px;
+    text-align: center;
+    line-height: 25px;
+    /* margin-left: -100px; */
+}
+
+.top-bar p {
+    color: #018DB0;
+    /* margin-top: -1%; */
+}
+
+.top-bar a {
+    color: #fff;
+}

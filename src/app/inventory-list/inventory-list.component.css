@@ -1,0 +1,105 @@
+.block-table {
+  display: inline-block !important;
+}
+
+.inline-table {
+  display: inline-table !important;
+}
+  
+
+
+.button {
+  position: relative;
+  overflow: hidden;
+  height: 40px;
+  padding: 0 2rem;
+  border-radius: 30px;
+  background: #018db0;
+  color: #fff;
+  border: none;
+  cursor: pointer
+}
+
+.button:hover::before {
+  transform: scaleX(1)
+}
+
+.button-content {
+  position: relative;
+  font-style: normal !important;
+  z-index: 1;
+  font-variant: small-caps;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 20px
+}
+
+.button-content i {
+  font-style: normal !important
+}
+
+.button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  width: 100%;
+  height: inherit;
+  border-radius: inherit;
+  background-color: #326789;
+  transition: all .8s
+}
+
+.bg-white {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: rgba(0, 0, 0, .3) 1px 2px 4px;
+  padding: 10px;
+  font-variant: small-caps
+}
+
+.custom-modal-backdrop {
+  z-index: 1000 !important;
+  /* Adjust the z-index as needed */
+}
+
+::ng-deep .modal-backdrop {
+  z-index: 1000 !important;
+}
+
+.page_height {
+  background-color: white;
+  min-height: calc(100vh - 182px);
+  /* height: 80vh; */
+  border-radius: 6px;
+}
+
+.ngx-pagination .current {
+  padding: 0.1875rem 0.625rem;
+  background: #018DB0 !important;
+  color: #fefefe;
+  cursor: default;
+  font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination {
+  padding-left: 0px;
+  font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination .current,
+:host ::ng-deep .btn-info {
+  background: #17a2b8 !important;
+  border: transparent;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination .current:hover {
+  background: #17a2b8 !important;
+  border-radius: 6px;
+  border: transparent;
+  font-size: 1rem;
+}

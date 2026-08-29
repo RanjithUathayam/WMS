@@ -1,0 +1,88 @@
+.btn-add{
+    height: 40px;
+    width: 80px;
+}
+
+.modal-dialog {
+    width: auto;
+    min-width: 55%;
+    pointer-events: all;
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 85% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        /* top: 2%; */
+    }
+}
+
+.tableConfig{
+    width: 85%;
+    border-radius: 10px;
+}
+
+.tbl-tit{
+    height: 55px;
+    /* background-color: #018DB0; */
+    border-radius: 10px 10px 0 0 ;
+}
+
+.table_title{
+    color: #ffffff;
+}
+
+.btn_close {
+    width: 42px !important;
+    padding: 0px !important;
+    /* background-color: #ffffff; */
+}
+
+.close_size {
+    font-size: 2rem;
+    /* color: #018DB0; */
+}
+
+.txt_input{
+    font-size: 20px;
+}
+
+.tbl_add{
+    width: 80%;
+}
+
+.btn_add, .btn_delete{
+    width: 100px;
+}
+
+.choose_aisle {
+    width: 40%;
+    height: 100%;
+    margin-left: 0px;
+    padding-top:1rem ;
+    position: relative;
+    font-size: 1.9rem;
+    color: white;
+    border-top-left-radius: 6px;
+    background-color: #018DB0;
+    font-weight: 500;
+    text-align: center !important;
+    font-variant: small-caps !important;
+}
+
+.choose_aisle::before {
+    width: 50%;
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 15px;
+    background: linear-gradient(105deg, #018DB0 50%, white 55%);
+}
+
+
+
+

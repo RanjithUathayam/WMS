@@ -1,0 +1,334 @@
+<section class="gk-section">
+  <div class="container-fluid mt-2 gk-container">
+    <div class="row page_height mx-1 my-2 py-2 gk-page">
+      <div class="col-12 gk-h100p">
+        <div class="table-container gk-table-container" [ngStyle]="{ 'border': filteredArray?.length == 0 ? '2px solid #dee2e6' : 'none' }"
+          #tableBody>
+          <table class="table table-bordered table-striped mb-2">
+
+
+            <thead class="fixed-header">
+              <tr style="width: 100%;">
+                  <th *ngIf="itemList?.length > 0">S.no</th>
+                  <th class="setPointer" *ngFor="let item of filterHeader" (click)="onSort(item.data, item.Type)">
+                      {{ item.header }}  
+                      <!-- <button (click)="onSort(item.data)"> --> 
+                          <i *ngIf="currentSortKey === item.data && isAscending" class="fas fa-arrow-up"></i> <!-- Ascending Icon -->
+                          <i *ngIf="currentSortKey === item.data && !isAscending" class="fas fa-arrow-down"></i> <!-- Descending Icon -->
+                          <i *ngIf="currentSortKey !== item.data" class="fas fa-sort"></i> <!-- Default/Reset Icon -->
+                      <!-- </button> -->
+                  </th>
+                  <th *ngIf="itemList?.length > 0 && (btnRights?.master_item_deletes || btnRights?.master_item_modifies)">
+                      Action
+                  </th>
+              </tr>
+          </thead>
+
+          
+            <tbody>
+              <tr style="width: 100%;" *ngIf="itemList?.length > 0 || filters">
+                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search" [(ngModel)]="filters['ItemCode']"
+                    (input)="applyFilters()">
+                </td>
+                <td class="p-0"> <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['ItemName']" (input)="applyFilters()"></td>
+                <td class="p-0"> <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['ItemGroup']" (input)="applyFilters()"></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td> 
+                <td *ngIf="btnRights?.master_item_modifies == true || btnRights?.master_item_deletes == true">
+                </td>
+              </tr>
+              <!-- font-size: 1.8vh; -->
+
+              <tr style="width: 100%; " 
+                *ngFor="let item of filteredArray | paginate: { itemsPerPage, currentPage: p };let i = index;">
+                <td class="col-sno">{{(i+1)}}</td>
+                <td *ngFor="let elem of filterHeader">
+                  <span>{{item[elem.data] | uppercase }}</span>
+                </td>
+ 
+
+                <td class="py-2"
+                  *ngIf="btnRights?.master_item_modifies == true || btnRights?.master_item_deletes == true">
+                  <div class="td-action">
+                    <i *ngIf="btnRights?.master_item_modifies" (click)="open(item)" class='fa fa-edit pointer ml-5'
+                      aria-hidden="true"></i>
+                    <div *ngIf="btnRights?.master_item_deletes"
+                      class="checkbox ml-4 d-flex justify-content-end align-items-end">
+                      <input id="cbx{{item.id}}" class="cbx" type="checkbox"
+                        (click)="activeInactive(item.id,item.Status)" [checked]="item.Status"> 
+                    </div>
+                  </div>
+                </td>
+              </tr> 
+            </tbody>
+          </table>
+          <div class="no-records-message" *ngIf="filteredArray?.length == 0">
+            <div>
+              <p>No Records Found</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class=" col-lg-2 d-none col-lg-block justify-content-between align-items-center d-flex">
+            <p class="mb-0 total_records d-flex">
+              <!-- Total No of  -->
+             <span class="d-none d-lg-block">Records : <span>{{filteredArray?.length}}</span> </span>
+             <!-- <span class="d-lg-none d-md-block"> Total Records : </span> <span class="d-lg-none d-md-block">{{filteredArray.length}}</span> -->
+            </p>
+          </div>
+
+          <div class="col-5 col-lg-5 col-md-6 d-flex justify-content-end align-items-center">
+
+             
+            <button *ngIf="btnRights?.master_item_creates" class="export-button btn btn-main button d-flex align-items-center justify-content-center ml-0 mr-4 " (click)="openSidebar('')">
+              <span class="button-content d-flex"><i class="fa fa-plus-square mr-2" aria-hidden="true"></i>New</span>
+            </button> 
+            <input type="file" #fileInput style="display: none;" accept=".xls, .xlsx"
+              (change)="onFileChange($event)" />
+
+              <!-- <div class="export-container"> -->
+                <button *ngIf="btnRights?.master_item_exports" class="export-button btn btn-main button d-flex align-items-center justify-content-center ml-0" (click)="toggleDropdown()" (click)="exportFile()">
+                  <span class="button-content d-flex">
+                    <i class="fa fa-download mr-1" aria-hidden="true"></i> Export</span>
+                  </button>
+                  <div *ngIf="flagset" class="dialog_scrim" (click)="falseSet()">
+                  </div>
+                  <div *ngIf="flagset1" class="dialog_scrim" (click)="falseSet1()">
+                  </div>
+                <div class="dropdown-menu" [class.show]="dropdownOpen">
+                  
+                  <button type="button" (click)="export('pdf')" class="btn button d-flex align-items-center justify-content-center"><span class="button-content">Pdf</span></button>
+                  <button type="button" (click)="export('csv')" class="btn button d-flex align-items-center justify-content-center"><span class="button-content">Csv</span></button>
+                  <button type="button" (click)="export('excel')" class="btn button d-flex align-items-center justify-content-center"><span class="button-content">Excel</span></button>
+                </div>
+              
+          </div>
+
+          
+
+          <div class="col-4 col-md-6 col-lg-5 d-flex justify-content-end align-items-center">
+            <pagination-controls (pageChange)="p = $event;" ></pagination-controls>
+          </div> 
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal pl-0" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content p-2">
+      <section>
+        <!-- <div>
+          <p class="preview-head my-3">Item List Preview Page</p>
+        </div> -->
+        <div class="justify-content-between align-items-center d-flex">
+          <div>
+            <p class="preview-head my-3">Item List Preview Page</p>
+          </div>
+          <div>
+            <button class="button close-icon" (click)="close()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+        <div class="table-container table-container2">
+          <table class="table table-bordered modal_table mb-0 part_table" id="exportdata">
+            <thead>
+              <tr>
+                <th class="col-1">S.No</th>
+                <th class="col-1">BinId</th>
+                <th class="col-1">PartName 
+                  
+                </th>
+                <th class="col-1">PartGroup</th>
+                <th class="col-1">PartCategory</th>
+                <th class="col-1">BatchNo</th>
+                <th class="col-1">PackSize</th>
+                <th class="col-1">InQuantity</th>
+                <th class="col-1">GrossWeight</th>
+                <th class="col-1">BinRejectionFlag</th>
+                <th class="col-1">BinHeight</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+              <tr *ngFor="let dataRow of excelDataArray; let i = index">
+                <td class="p-2">{{ i + 1 }}</td>
+                <td class="p-2">{{ dataRow['PalletId'] }}</td>
+                <td class="p-2">{{ dataRow['PartName'] }}</td>
+                <td class="p-2">{{ dataRow['PartGroup'] }}</td>
+                <td class="p-2">{{ dataRow['PartCategory'] }}</td>
+                <td class="p-2">{{ dataRow['BatchNo'] }}</td>
+                <td class="p-2">{{ dataRow['PackSize'] }}</td>
+                <td class="p-2">{{ dataRow['InQuantity'] }}</td>
+                <td class="p-2">{{ dataRow['GrossWeight'] }}</td>
+                <td class="p-2">{{ dataRow['PalletRejectionFlag'] }}</td>
+                <td class="p-2">{{ dataRow['PalletHeight'] }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="row">
+          <div class="col-4 d-flex data_counts justify-content-start align-items-center">
+            <div class="d-flex ml-4">
+              <p class="mb-0 preview_page">Total Records :</p>
+              <span class="ml-1 preview_page">{{ initialTotalDataCount }}</span>
+            </div>
+          </div>
+          <div class="col-8 justify-content-end align-items-center d-flex">
+            <div class="p-2 mr-2">
+              <button class="button" (click)="sendToServer()"><span class="button-content">Confirm</span></button>
+            </div>
+            <div class="p-2 mr-4">
+              <button class="button" (click)="close()"><span (click)="close()"
+                  class="button-content">Close</span></button>
+            </div>
+          </div>
+        </div>
+        <!-- <div class="d-flex justify-content-between">
+          <div class="p-2">
+            <button class="button" (click)="sendToServer()"><span class="button-content">Submit</span></button>
+          </div>
+          <div class="d-flex data_counts justify-content-center align-items-center">
+            <p class="mb-0 preview_page">Total Fields :</p>
+            <span class="ml-1">{{ initialTotalDataCount }}</span>
+          </div>
+
+          <div class="d-flex data_counts justify-content-center align-items-center">
+            <p class="mb-0">Submitted Fields :</p>
+            <span class="ml-1">{{ submittedFieldsCount }}</span>
+          </div>
+          <div class="p-2">
+            <button class="button" (click)="close()"><span (click)="close()"
+                class="button-content">Cancel</span></button>
+          </div>
+        </div> -->
+      </section>
+    </div>
+  </div>
+</div>
+
+<section class="sidebar close" id="sidebar">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <!-- <div class="py-2">
+          <p class="add_items">Add New Items</p>
+        </div> -->
+        <div class="justify-content-between align-items-center d-flex py-2">
+          <div>
+            <p class="sidebar-head">{{itemId == '' ? 'Add New Item' : 'Edit Item'}}</p>
+          </div>
+          <div>
+            <button class="button close-icon" (click)="closeModal()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <form [formGroup]="itemForm">
+            <div class="form-group">
+              <div class="py-2">
+                <label for="item_code">Item Code <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="item_code"
+                  [ngClass]="{ 'is-invalid': submitted && f['item_code'].errors }">
+                <div *ngIf="submitted && f['item_code'].errors" class="invalid-feedback">
+                  <div *ngIf="f['item_code'].errors['required']">Item Code is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label for="item_name">Item Name <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="item_name"
+                  [ngClass]="{ 'is-invalid': submitted && f['item_name'].errors }">
+                <div *ngIf="submitted && f['item_name'].errors" class="invalid-feedback">
+                  <div *ngIf="f['item_name'].errors['required']">Item Name is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label for="item_group">Item Group <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="item_group"
+                  [ngClass]="{ 'is-invalid': submitted && f['item_group'].errors }">
+                <div *ngIf="submitted && f['item_group'].errors" class="invalid-feedback">
+                  <div *ngIf="f['item_group'].errors['required']">Item Group is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label for="category">Category <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="category"
+                  [ngClass]="{ 'is-invalid': submitted && f['category'].errors }">
+                <div *ngIf="submitted && f['category'].errors" class="invalid-feedback">
+                  <div *ngIf="f['category'].errors['required']">Category is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label for="description">Description <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="description"
+                  [ngClass]="{ 'is-invalid': submitted && f['description'].errors }">
+                <div *ngIf="submitted && f['description'].errors" class="invalid-feedback">
+                  <div *ngIf="f['description'].errors['required']">Description is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label for="color">Color <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="color" [ngClass]="{ 'is-invalid': submitted && f['color'].errors }">
+                <div *ngIf="submitted && f['color'].errors" class="invalid-feedback">
+                  <div *ngIf="f['color'].errors['required']">Color is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label for="size">Size <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="size" [ngClass]="{ 'is-invalid': submitted && f['size'].errors }">
+                <div *ngIf="submitted && f['size'].errors" class="invalid-feedback">
+                  <div *ngIf="f['size'].errors['required']">Size is required</div>
+                </div>
+              </div>
+
+              <div class="py-2">
+                <label for="style">Style <span class="text-danger"> *</span> :</label>
+                <input type="text" formControlName="style" [ngClass]="{ 'is-invalid': submitted && f['style'].errors }">
+                <div *ngIf="submitted && f['style'].errors" class="invalid-feedback">
+                  <div *ngIf="f['style'].errors['required']">Style is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label for="bin_capacity">Bin Capacity <span class="text-danger"> *</span> :</label>
+                <input type="number" formControlName="bin_capacity"
+                  [ngClass]="{ 'is-invalid': submitted && f['bin_capacity'].errors }">
+                <div *ngIf="submitted && f['bin_capacity'].errors" class="invalid-feedback">
+                  <div *ngIf="f['bin_capacity'].errors['required']">Bin Capacity is required</div>
+                </div>
+              </div>
+              <!-- <div class="py-2">
+                <label for="text">Pack Size <span class="text-danger"> *</span> :</label>
+                <input type="number" formControlName="pack_size"
+                  [ngClass]="{ 'is-invalid': submitted && f['pack_size'].errors }">
+                <div *ngIf="submitted && f['pack_size'].errors" class="invalid-feedback">
+                  <div *ngIf="f['pack_size'].errors['required']">Pack Size is
+                    required</div>
+                </div>
+              </div> -->
+              <div class="d-flex justify-content-end align-items-center pt-4">
+                <button class="button mr-2" (click)="submit()">
+                  <span class="button-content">Submit</span>
+                </button>
+                <button class="button" (click)="itemForm.reset()">
+                  <span class="button-content">Clear</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,179 @@
+<section class="gk-section">
+  <div class="container-fluid gk-container">
+    <div class="row gk-container2 m-0">
+      <div class="col-12 px-0">
+        <span class="refreshDate">Last Updated On: &nbsp;
+          <!-- Full date format for large screens and above -->
+          <span class="setDate d-none d-xl-block">{{ lastUpdatedDateTime | date: 'dd-MM-yyyy hh:mm:ss a' }}</span>
+        
+          <!-- Only time format for medium screens -->
+          <span class="setDate d-none d-sm-block d-xl-none">{{ lastUpdatedDateTime | date: 'hh:mm:ss a' }}</span> 
+          &nbsp;&nbsp;
+          
+          <button class="button refresh-button" (click)="getprebinningdata()">
+            <span class="button-content setbtncontent">
+              <i class="fa fa-refresh iconColor mr-1" aria-hidden="true"></i>
+            </span>
+          </button>
+        </span>
+        <!-- [ngStyle]="{ 'border': getprebinning.length === 0 ? '2px solid #dee2e6' : 'none' }" -->
+        <div class="table-container" [ngStyle]="{ 'border': '2px solid #dee2e6'  }" #tableBody>
+          <table class="table table-bordered table-striped mb-2">
+            <thead class="fixed-header">
+              <tr style="width: 100%;">
+                <th class="table_head_font col-sno">S.No</th>
+                <th class="table_head_font setPointer" (click)="onSort('GRNType', 'text')">Grn Type
+                  <i *ngIf="currentSortKey === 'GRNType' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'GRNType' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'GRNType'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('GRNNo', 'text')">Grn No
+                  <i *ngIf="currentSortKey === 'GRNNo' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'GRNNo' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'GRNNo'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('ItemCode', 'text')">Item Code
+                  <i *ngIf="currentSortKey === 'ItemCode' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'ItemCode' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'ItemCode'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('ItemName', 'text')">Item Name
+                  <i *ngIf="currentSortKey === 'ItemName' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'ItemName' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'ItemName'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('ItemGroup', 'text')">Item Group
+                  <i *ngIf="currentSortKey === 'ItemGroup' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'ItemGroup' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'ItemGroup'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('BinID', 'text')">Bin Id
+                  <i *ngIf="currentSortKey === 'BinID' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'BinID' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'BinID'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('reqQty', 'number')">Tot Grn Item Qty
+                  <i *ngIf="currentSortKey === 'reqQty' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'reqQty' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'reqQty'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('binnedQty', 'number')">Tot Grn Binned Qty
+                  <i *ngIf="currentSortKey === 'binnedQty' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'binnedQty' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'binnedQty'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('ItemStatus', 'text')">Item Status
+                  <i *ngIf="currentSortKey === 'ItemStatus' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'ItemStatus' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'ItemStatus'" class="fas fa-sort"></i>
+                </th>
+                <th class="table_head_font setPointer" (click)="onSort('remark', 'text')">Pre-Binning Remarks
+                  <i *ngIf="currentSortKey === 'remark' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'remark' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'remark'" class="fas fa-sort"></i>
+                </th>
+                <!-- (click)="onSort('Remarks', 'text')" -->
+                <th class="table_head_font setPointer" >Approval Remarks
+                  <!-- <i *ngIf="currentSortKey === 'Remarks' && isAscending" class="fas fa-arrow-up"></i> -->
+                  <!-- <i *ngIf="currentSortKey === 'Remarks' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'Remarks'" class="fas fa-sort"></i> -->
+                </th>
+                <th class="table_head_font">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="width: 100%;" *ngIf="getprebinning?.length > 0 || filters">
+                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input w-100" placeholder="search" [(ngModel)]="filters['GRNType']"
+                    (input)="applyFilters()">
+                </td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['GRNNo']" (input)="applyFilters()"></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['ItemCode']" (input)="applyFilters()"></td>
+                <td></td>
+                <td></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                  [(ngModel)]="filters['BinID']" (input)="applyFilters()"></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>   
+              </tr>
+              <tr style="width: 100%;" *ngFor="let item of filteredData | paginate: { itemsPerPage, currentPage: p }; let i = index;">
+                <td class="table_data_font col-sno">{{ i + 1 }}</td>
+                <td class="table_data_font">{{ item.GRNType }}</td>
+                <td class="table_data_font">{{ item.GRNNo }}</td>
+                <td class="table_data_font">{{ item.ItemCode }}</td>
+                <td class="table_data_font">{{ item.ItemName }}</td>
+                <td class="table_data_font">{{ item.ItemGroup }}</td>
+                <td class="table_data_font">{{ item.BinID }}</td>
+                <td class="table_data_font">{{ item.reqQty ? item.reqQty : '-' }}</td>
+                <td class="table_data_font">{{ item.binnedQty ? item.binnedQty : '-' }}</td>
+                <td class="table_data_font">{{ item.ItemStatus }}</td>
+                <td class="table_data_font">{{ item.remark ? item.remark : '-' }}</td>
+                <td class="table_data_font">
+                  <ng-select2 class="data_place" [data]="remarksData" placeholder="Select Remarks" [options]="options" [value]="item.remark" (valueChanged)='selectRemarks($event, item, i)'></ng-select2>
+                </td>
+                <td class="table_data_font d-flex justify-content-center align-items-center">
+                  <input class="cbx" type="checkbox" [(ngModel)]="item.selected" (change)="onCheckboxChange(item)" [disabled]="!(item.ItemStatus == 'Completed')" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div class="no-records-message" *ngIf="getprebinning.length === 0">
+            <div>
+              <p>No Records Found</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-2 justify-content-start align-items-center d-flex" style="height: 6vh;">
+        <!-- <p class="mb-0 d-flex total_records">
+              <span class="d-lg-none">Count : </span> <span class="d-none d-lg-block">Records :
+              </span><span>&nbsp;{{getprebinning.length}}</span>
+            </p> -->
+        <p class="mb-0 d-flex total_records">
+          <span>Records : {{filteredData.length}}</span>
+        </p>
+      </div>
+      <div class="col-6" style="height: 6vh;display: flex;justify-content: space-evenly;align-items: center;">
+        <div>
+          <button class="button" (click)="approveprebinningdata('Approve')">
+            <span class="button-content">Approve</span>
+          </button>
+        </div>
+        <div>
+          <button class="button" (click)="approveprebinningdata('Reject')">
+            <span class="button-content">Reject</span>
+          </button>
+        </div>
+        <div>
+          <button class="button" (click)="approveprebinningdata('PartialApprove')">
+            <span class="button-content">Partial Approve</span>
+          </button>
+        </div>
+        <div>
+          <button class="button" (click)="approveprebinningdata('ShortClose')">
+            <span class="button-content">Short Close</span>
+          </button>
+        </div>
+        <div>
+          <button class="button" (click)="movetoPreBinning()">
+            <span class="button-content"> Move to Pre-Binning</span>
+          </button>
+        </div>
+      </div>
+      <div class="col-4 d-flex justify-content-end align-items-center p-0" style="height: 6vh;">
+        <div class="d-flex justify-content-end align-items-center p-0">
+          <pagination-controls class="p-0" [maxSize]="5" (pageChange)="p = $event"></pagination-controls>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

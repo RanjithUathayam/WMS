@@ -1,0 +1,201 @@
+<section class="gk-section">
+    <div class="container-fluid gk-container bg-white mt-2">
+        <div class="row gk-container2 m-0">
+            <div class="col-12 px-0">
+                <div class="table-container"
+                    [ngStyle]="{ 'border': filteredRecords?.length == 0 ? '2px solid #dee2e6' : 'none'}">
+                    <table class="table table-bordered table-striped part_table">
+                        <thead class="fixed-header">
+                            <tr style="width: 100%;">
+                                <th class="table_head_font setPointer" *ngFor="let item of tableHeader"
+                                    (click)="onSort(item.data, item.type)">
+                                    {{ item.header }}
+                                    <i *ngIf="currentSortKey === item.data && isAscending" class="fas fa-arrow-up"></i>
+                                    <i *ngIf="currentSortKey === item.data && !isAscending"
+                                        class="fas fa-arrow-down"></i>
+                                    <i *ngIf="currentSortKey !== item.data" class="fas fa-sort"></i>
+                                </th>
+                            </tr>
+                        </thead>
+ 
+                        <tbody>
+                            <!-- Search Row -->
+                            <tr *ngIf="filteredRecords?.length > 0 || tableData?.length > 0 || filters" style="width: 100%;">
+                                <td class="p-0" *ngFor="let item of tableHeader">
+                                    <input *ngIf="item.search" type="search" class="filter-input"
+                                        placeholder="Search..." [(ngModel)]="filters[item.data]"
+                                        (input)="applyFilters()">
+                                </td>
+                            </tr>
+ 
+                            <!-- Main Data Rows & Expanded Row -->
+                            <!-- Main Data Rows & Expanded Row -->
+                            <ng-container
+                                *ngFor="let item of filteredRecords | paginate: { itemsPerPage: itemsPerPage, currentPage: p }">
+                                <!-- Main Row -->
+                                <tr (click)="isExpandable ? toggleExpand(item) : null" class="expandable-row"
+                                    [class.expanded]="expandedRows[item.ItemName]">
+ 
+                                    <td class="table_data_font" *ngFor="let elem of tableHeader">
+                                        <ng-container *ngIf="elem.data === 'ItemName'">
+                                            <!-- Show Expand/Collapse Icon Only If isExpandable is True -->
+                                            <i *ngIf="isExpandable"
+                                                [ngClass]="expandedRows[item.ItemName] ? 'fas fa-arrow-circle-up' : 'fas fa-arrow-circle-down'"
+                                                class="expand-icon">
+                                            </i>
+                                            {{ item[elem.data] }}
+                                        </ng-container>
+ 
+                                        <span *ngIf="(elem.data == 'Logintime') || (elem.data == 'Logouttime')">
+                                            {{ item[elem.data].split(' ')[1] }}
+                                        </span>
+ 
+                                        <span
+                                            *ngIf="!elem.date && elem.data != 'Logintime' && elem.data != 'Logouttime'">
+                                            {{ item[elem.data] }}
+                                        </span>
+ 
+                                        <span
+                                            *ngIf="elem.date && elem.data != 'Logintime' && elem.data != 'Logouttime'">
+                                            {{ item[elem.data]?.includes('T') && item[elem.data]?.endsWith('Z')
+                                            ? (item[elem.data] | date : 'dd/MM/yyyy HH:mm:ss' : 'UTC')
+                                            : item[elem.data] }}
+                                        </span>
+                                    </td>
+                                </tr>
+ 
+ 
+                                <!-- Expanded Details Row -->
+                                <tr *ngIf="isExpandable && expandedRows[item.ItemName]" class="expanded-content">
+                                    <td [attr.colspan]="tableHeader.length" style="padding: 0;">
+                                        <div class="expanded-container">
+                                            <table class="expanded-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>S.No</th>
+                                                        <th>Floor</th>
+                                                        <th>Station</th>
+                                                        <th>Bin ID</th>
+                                                        <th>Item Code</th>
+                                                        <th>Status</th>
+                                                        <th>Req Qty</th>
+                                                        <th>Picking Qty</th>
+                                                        <th>Alarm Status</th>
+                                                        <th>Remark</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr *ngFor="let subItem of item.Items; let j = index">
+                                                        <td [ngClass]="{'color-highlight': subItem.alarmStatus != 'No Alarm'}">{{ subItem.serialNo }}</td>
+                                                        <td>{{ subItem.Floor }}</td>
+                                                        <td>{{ subItem.Station }}</td>
+                                                        <td>{{ subItem.BinID }}</td>
+                                                        <td>{{ subItem.ItemCode }}</td>
+                                                        <td>{{ subItem.ProcessStatus }}</td>
+                                                        <td>{{ subItem.Quantity }}</td>
+                                                        <td>{{ subItem.PickingQty }}</td>
+                                                        <td>{{ subItem.alarmStatus }} </td>
+                                                        <td>{{ subItem.ConfirmRemark }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+ 
+ 
+ 
+                            </ng-container>
+                        </tbody>
+                    </table>
+ 
+                    <div class="no-records-message" *ngIf="filteredRecords?.length == 0">
+                        <div>
+                            <p class="no_records">No Records Found</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="flagset" class="dialog_scrim" (click)="falseSet()">
+            </div>
+ 
+ 
+        </div>
+ 
+        <div class="d-flex col-12 positionFixed p-0">
+            <div class="col-3 justify-content-start align-items-center d-flex"
+                style="height: 5vh;display: flex;justify-content: start;align-items: center;">
+                <div>
+                    <p *ngIf="exportApi != 'transaction/inventory'" class="total_records">
+                        Total Records : <span id="part_record">{{filteredRecords?.length}}</span>
+                    </p>
+                    <p *ngIf="exportApi == 'transaction/inventory'" class="total_records">
+                        Total Records : <span id="part_record">{{totRec || filteredRecords?.length}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="col-2" style="height: 5vh;display: flex;justify-content: space-between;align-items: center;">
+ 
+                <div *ngIf="isShowExportBtn == true" style="display: flex;justify-content: end;align-items: center;">
+                    <div style="display: flex;align-items: center;justify-content: center;"
+                        class="btn-group-fab mt-5 mr-5" role="group" aria-label="FAB Menu" #fabGroup>
+                        <div style="display: flex;align-items: center;justify-content: center;">
+                            <button #mainBtn type="button"
+                                class="btn btn-main button has-tooltip d-flex justify-content-center align-items-center"
+                                (click)="exportFile()" data-placement="left" title="Menu"><span class="button-content">
+                                    <i class="fa fa-download mr-1" aria-hidden="true"></i> Export
+                                </span></button>
+                            <button #subBtn1 (click)="export('pdf')"
+                                class="btn btn-sub btn-info has-tooltip d-flex justify-content-center align-items-center"
+                                data-placement="left" title="Pdf"> Pdf </button>
+                            <button #subBtn2 (click)="export('excel')"
+                                class="btn btn-sub btn-info has-tooltip d-flex justify-content-center align-items-center"
+                                data-placement="left" title="Excel"> Excel </button>
+                            <button #subBtn3 (click)="export('csv')"
+                                class="btn btn-sub btn-info has-tooltip d-flex justify-content-center align-items-center"
+                                data-placement="center" title="CSV">Csv</button>
+ 
+                        </div>
+                    </div>
+                </div>
+ 
+            </div>
+ 
+            <div class="col-1 d-flex justify-content-between align-items-center">
+                <div class=" d-flex align-items-center justify-content-center" style="height: 5vh !important;"
+                    *ngIf="exportApi == 'history/searchAlarmHistory'">
+                    <button class="button" (click)="conveyorReset()">
+                        <span class="button-content">Conveyor Reset</span>
+                    </button>
+                </div>
+ 
+                <!-- <div class=" d-flex align-items-center justify-content-center" style="height: 5vh !important;"
+                    *ngIf="exportApi == 'history/searchAlarmHistory'">
+                    <button class="button" (click)="mlsReset()">
+                        <span class="button-content">MLS Reset</span>
+                    </button>
+                </div>
+ 
+                <div class=" d-flex align-items-center justify-content-center" style="height: 5vh !important;"
+                    *ngIf="exportApi == 'history/searchAlarmHistory'">
+                    <button class="button" (click)="liftReset()">
+                        <span class="button-content">Lift Reset</span>
+                    </button>
+                </div> -->
+            </div>
+
+            <div *ngIf="exportApi == 'transaction/inventory' && inventoryType == 'Inventory'" >
+                <p class="total_records">Loaded Records : <span id="part_record">{{filteredRecords?.length}}</span></p>
+            </div>
+            
+            <div class="col-4 d-flex justify-content-end align-items-center p-0"
+                style="height: 5vh; display: flex; justify-content: end; align-items: center; padding: 0px !important;">
+                <pagination-controls class="p-0" (pageChange)="p = $event" [maxSize]="maxPageSize"
+                    [directionLinks]="true" [autoHide]="true">
+                </pagination-controls>
+            </div> 
+        </div>
+    </div>
+</section>
+ 
+ 

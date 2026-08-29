@@ -1,0 +1,153 @@
+<section class="detail-bar">
+  <div class="container-fluid">
+      <div class="row">
+<nav class="navbar navbar-expand-lg menu-bar col-lg-6 col-md-6">
+<!-- <a class="navbar-brand" href="#">Navbar</a> -->
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+<span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+<ul class="navbar-nav mr-auto">
+<!-- <li class="nav-item active">
+  <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+</li> -->
+<!-- <li class="nav-item">
+  <a class="nav-link" href="#">Link</a>
+</li> -->
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Transactions
+  </a>
+  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+     <a [routerLink]="'/inventory_list'" class="dropdown-item" href="">Inventory List</a>
+    <a [routerLink]="'/itemtransaction_list'" class="dropdown-item" href="">Item Transaction List</a>
+    <!-- <div class="dropdown-divider"></div> -->
+    <a [routerLink]="'/palletrequest_list'" class="dropdown-item" href="">Pallet Request List</a>
+    <a [routerLink]="'/pallet_list'" class="dropdown-item" href="">Pallet List</a>
+    <a class="nav-link sub" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">History <i class="fa fa-caret-right"></i>
+      <div class="dropdown-menu submenu" aria-labelledby="navbarDropdown">
+    <a [routerLink]="'/loadunload_history'" class="dropdown-item" href="">Load / Unload History</a>
+    <a [routerLink]="'/error_history'" class="dropdown-item" href="#">Alarm History</a>
+    <!-- <div class="dropdown-divider"></div> -->
+    <a [routerLink]="'/rejectedpallet_history'" class="dropdown-item" href="">Rejected Pallet History</a>
+    <a [routerLink]="'/maintenancehistory'" class="dropdown-item" href="">Maintenance History</a>
+    <a [routerLink]="'/expiry_alert'" class="dropdown-item" href="">Expiry Alert</a>
+    <a [routerLink]="'/userlog'" class="dropdown-item" href="">User Log</a>
+    
+  </div>
+    </a>
+  </div>
+</li>
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Operations
+  </a>
+  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+    
+    <a class="nav-link sub" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Store <i class="fa fa-caret-right"></i>
+      <div class="dropdown-menu submenu2" aria-labelledby="navbarDropdown">
+    <a [routerLink]="'/pallet_storage'" class="dropdown-item" href="">Pallaet Storage </a>
+    <a [routerLink]="'/storage_details'" class="dropdown-item" href="#">Storage Details</a> 
+  </div>
+    </a>
+
+    
+    <a [routerLink]="'/retrieve_individualpallet'" class="dropdown-item" href="">Retrieve Individual Pallet</a>
+    <a [routerLink]="'/retrieve_pallets'" class="dropdown-item" href="#">Retrieve Pallets</a> 
+  
+    <a [routerLink]="'/pallet_relocation'" class="dropdown-item" href="#">Pallet Relocation</a>
+  </div>
+</li>
+ <!--<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Settings
+  </a>
+  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+    <router-link :to="{ path: '/emergencyoperations' }" ><a class="dropdown-item" href="#">Emergency Operations</a></router-link>
+    <a class="dropdown-item" href="#">Warehouse Customisation</a>
+   
+    <a class="dropdown-item" href="#">Location Maintenance</a>
+    <a class="dropdown-item" href="#">User Management</a>
+    <a class="dropdown-item" href="#">Maual Entry-pallet</a>
+    <a class="dropdown-item" href="#">Stock Adjustment</a>
+    <a class="dropdown-item" href="#">Conveyor Details</a>
+  </div>
+</li> -->
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Status
+  </a>
+  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+  <a [routerLink]="'/location_status'" class="dropdown-item" href="#">Location Status</a>
+    <a [routerLink]="'/crane_status'" class="dropdown-item" href="#">Crane Status</a>
+    <!-- <div class="dropdown-divider"></div> -->
+    <a [routerLink]="'/equipment_status'" class="dropdown-item" href="#">Equipment Status</a>
+   <a [routerLink]="'/view_commands'" class="dropdown-item" href="#">View Commands</a>
+    <a class="dropdown-item" href="#">Dashboard</a>
+  
+  </div>
+</li>
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Utilities
+  </a>
+  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+    <!-- <a class="dropdown-item" href="#">Compress</a> -->
+    <!-- <a class="dropdown-item" href="#">System</a> -->
+    <!-- <div class="dropdown-divider"></div> -->
+    <a [routerLink]="'/shortcuts'" class="dropdown-item" href="#">Shortcuts</a>
+    <a [routerLink]="'/change_password'" class="dropdown-item" href="#">Change Password</a>
+    
+  </div>
+</li>
+<!-- <li class="nav-item">
+  <a class="nav-link disabled" href="#">Disabled</a>
+</li> -->
+</ul>
+<!-- <form class="form-inline my-2 my-lg-0">
+<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+</form> -->
+</div>
+</nav>
+<div class="col-lg-4 col-md-4">
+<div class="row">
+<p class="col-lg-3 col-md-3 offset-md-1 text-left ml-3">
+  Hi,<span id="user">Admin</span>
+</p>
+
+<p class="col-lg-8 col-md-8">Last login:<span id="login_date"></span></p>
+</div>
+<div class="row">
+<marquee width=100% height=30px class="col-lg-12 col-md-12" id="status"> Status : Crane 1 : Active, Crane 2 : Idle, Conveyor 1: Enabled, Conveyor 2: Fault , Scanner : Enabled </marquee>
+</div> 
+</div>
+
+<div class="col-lg-2 col-md-2 ml-2">
+<div class="row">
+<div class="progress">
+<div id="dynamic" class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+<span id="current-progress"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+  </div>
+</section>
+<!-- <script>
+  $(function() {
+  var current_progress = 0;
+  var interval = setInterval(function() {
+      current_progress += 20;
+      $("#dynamic")
+      .css("width", current_progress + "%")
+      .css("backgroundColor", current_progress + "%")
+      .attr("aria-valuenow", current_progress)
+      .text( "Occupied : " + current_progress + "%" );
+      if (current_progress >= 100)
+          clearInterval(interval);
+  }, 500);
+});
+</script> -->

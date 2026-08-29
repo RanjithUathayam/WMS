@@ -1,0 +1,259 @@
+* {
+    font-variant: small-caps !important
+}
+
+label {
+    font-weight: 700;
+    color: #018db0
+}
+
+input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box
+}
+
+.full-width-input {
+    width: 100%;
+}
+
+.alarm_history {
+    color: #018DB0;
+    font-size: 17px;
+}
+
+.button {
+    position: relative;
+    overflow: hidden;
+    height: 40px;
+    padding: 0 2rem;
+    border-radius: 30px;
+    background: #018db0;
+    color: #fff;
+    border: none;
+    cursor: pointer
+}
+
+.button:hover::before {
+    transform: scaleX(1)
+    
+}
+
+.button-content {
+    position: relative;
+    z-index: 1;
+    font-variant: small-caps;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 20px
+
+}
+
+.button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    width: 100%;
+    height: inherit;
+    border-radius: inherit;
+    background-color: #326789;
+    transition: all .8s
+}
+
+.bg-white {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: rgba(0, 0, 0, .3) 1px 2px 4px;
+    padding: 10px;
+    font-variant: small-caps
+}
+
+.full-width-input {
+    height: 40px;
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    text-align: center;
+    font-size: 16px
+}
+
+.search_row {
+    width: 100%;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    text-align: center !important;
+    background-color: #fff !important
+}
+
+.button-content i {
+    font-style: normal
+}
+
+* {
+    font-variant: small-caps !important
+}
+
+.filter-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px
+}
+
+.total {
+    margin-bottom: 0
+}
+
+.sidebar {
+    position: fixed;
+    top: 0px;
+    right: 0;
+    height: 100%;
+    width: 25%;
+    background: #e6e6e6;
+    z-index: 100;
+    transition: all 0.5s ease;
+    border-left: 2px solid #018DB0;
+    border-bottom: 2px solid #018DB0;
+}
+
+.sidebar.close {
+    width: 0px;
+}
+
+.page_height {
+    background-color: white;
+    /* height: 80vh; */
+    border-radius: 6px;
+}
+
+
+
+.storage_filter {
+    font-size: 1.4rem;
+    color: #018DB0;
+    font-weight: 500;
+}
+
+.ngx-pagination .current {
+    padding: 0.1875rem 0.625rem;
+    background: #018DB0 !important;
+    color: #fefefe;
+    cursor: default;
+    font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination {
+    padding-left: 0px;
+    font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination .current,
+:host ::ng-deep .btn-info {
+    background: #17a2b8 !important;
+    border: transparent;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination .current:hover {
+    background: #17a2b8 !important;
+    border-radius: 6px;
+    border: transparent;
+    font-size: 1rem;
+}
+
+.filter_label {
+    font-size: 1.1rem;
+    color: #018DB0;
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+}
+
+.btns_sidebar{
+    column-gap: 14px;
+}
+
+.filter_icon {
+    /* width: 8rem; */
+    position: absolute;
+    top: -4.3vh;
+    display: flex;
+    left: 90%;
+    text-align: center;
+    /* width: 6vw; */
+    padding: 2vh 2vw !important;
+    height: 4vh !important;
+    align-items: center;
+    font-size: 2vh !important;
+    font-weight: 500 !important;
+}
+
+.positionset{
+    margin: 0.2vh 0.1vw !important;
+    
+}
+
+.positionset input{
+    min-height: 3vh !important;
+    font-size: 1.8vh !important;
+    padding: 0.5vh 0.5vw !important;
+    margin: 0.2vh 0.1vw !important;
+}
+.positionset label{
+    font-size: 1.8vh !important;
+}
+
+::ng-deep .data_place .select2-selection {
+    min-height: 3vh !important;
+}
+::ng-deep .data_place .select2-selection .select2-selection__rendered {
+    min-height: 3vh !important; 
+    align-items:center !important ;
+}
+::ng-deep .data_place .select2-selection .select2-selection__arrow {
+    min-height:2.8vh !important; 
+}
+
+.storage_filter{
+    font-size: 2vh !important;
+}
+
+.closesidebar {
+    padding: 0px !important;
+    width: 4vh !important;
+    height: 4vh !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.closesidebar span {
+    font-size: 2vh !important;
+    margin: 0px !important;
+}
+
+:host ::ng-deep .select2{
+    width: calc(100% - 0px) !important;
+}
+
+@media (max-width: 1024px) {
+    .filter_icon{
+        top: -8.8vh !important;
+        left: 87% !important; 
+        background-color: white !important;
+    }
+    .filter_icon i
+    {
+        background-color: white !important;
+    }
+}
+

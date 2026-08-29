@@ -1,0 +1,147 @@
+<section class="gk-section mb-0">
+  <div class="container-fluid mt-2 gk-container">
+    <div class="row page_height mx-1 my-2 py-2 gk-page">
+      <!-- [ngStyle]="{ 'border': grndetails.length === 0 ? '2px solid #dee2e6' : 'none' }" -->
+      <div class="col-12 gk-h100p">
+        <span class="refreshDate">Last Updated On: &nbsp;
+          <!-- Full date format for large screens and above -->
+          <span class="setDate d-none d-xl-block">{{ lastUpdatedDateTime | date: 'dd-MM-yyyy hh:mm:ss a' }}</span>
+        
+          <!-- Only time format for medium screens -->
+          <span class="setDate d-none d-sm-block d-xl-none">{{ lastUpdatedDateTime | date: 'hh:mm:ss a' }}</span> 
+          &nbsp;&nbsp;
+          
+          <button class="button refresh-button" (click)="prebinningdata()">
+            <span class="button-content setbtncontent">
+              <i class="fa fa-refresh iconColor mr-1" aria-hidden="true"></i>
+            </span>
+          </button>
+        </span>
+        <div class="table-container gk-table-container"
+          [ngStyle]="{ 'border':  '2px solid #dee2e6' }" #tableBody>
+          <table class="table table-bordered table-striped mb-2">
+            <thead class="fixed-header">
+              <tr style="width: 100%;">
+                <th>S.No</th>
+                <th class="setPointer" (click)="onSort('GRNNo', 'text')">GRN No
+                  <i *ngIf="currentSortKey === 'GRNNo' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'GRNNo' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'GRNNo'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('Type', 'text')">GRN Type
+                  <i *ngIf="currentSortKey === 'Type' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'Type' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'Type'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('ItemCode', 'text')">Item Code
+                  <i *ngIf="currentSortKey === 'ItemCode' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'ItemCode' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'ItemCode'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('ItemName', 'text')">Item Name
+                  <i *ngIf="currentSortKey === 'ItemName' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'ItemName' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'ItemName'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('ItemGroup', 'text')">Item Group
+                  <i *ngIf="currentSortKey === 'ItemGroup' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'ItemGroup' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'ItemGroup'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('BinID', 'text')">Bin Id
+                  <i *ngIf="currentSortKey === 'BinID' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'BinID' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'BinID'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('Quantity', 'number')">Total GRN Quantity
+                  <i *ngIf="currentSortKey === 'Quantity' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'Quantity' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'Quantity'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('Binning_Qty', 'number')">Total Binned Quantity
+                  <i *ngIf="currentSortKey === 'Binning_Qty' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'Binning_Qty' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'Binning_Qty'" class="fas fa-sort"></i>
+                </th>
+                <th class="setPointer" (click)="onSort('GRNStatus', 'text')">Item Status
+                  <i *ngIf="currentSortKey === 'GRNStatus' && isAscending" class="fas fa-arrow-up"></i>
+                  <i *ngIf="currentSortKey === 'GRNStatus' && !isAscending" class="fas fa-arrow-down"></i>
+                  <i *ngIf="currentSortKey !== 'GRNStatus'" class="fas fa-sort"></i>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['GRNNo']" (input)="applyFilters()">
+                </td>
+                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['ItemCode']" (input)="applyFilters()">
+                </td>
+                <td></td>
+                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['BinID']" (input)="applyFilters()">
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr style="width: 100%;" *ngFor="let item of filteredArray| paginate: { itemsPerPage, currentPage: p }; let i = index;">
+                <td>{{ i + 1 }}</td>
+                <td>{{ item.GRNNo }}</td>
+                <td>{{ item.Type }}</td>
+                <td>{{ item.ItemCode }}</td>
+                <td>{{ item.ItemName }}</td>
+                <td>{{ item.ItemGroup }}</td>
+                <td>{{ item.BinID }}</td>
+                <td>{{ item.Quantity }}</td>
+                <td>{{ item.Binning_Qty }}</td>
+                <td>{{ item.GRNStatus }}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div class="no-records-message" *ngIf="grndetails?.length === 0">
+            <div>
+              <p>No Records Found</p>
+            </div>
+          </div>
+        </div>
+        <div class="row d-flex justify-content-center align-items-center">
+          <div class="col-lg-4 col-md-2 justify-content-start align-items-center d-flex">
+            <p class="mb-0 d-flex total_records">
+              <span class="d-lg-none d-md-block">Count : </span>
+              <span class="d-none d-lg-block">Total Records : </span>
+              <span>&nbsp;{{filteredArray?.length}}</span>
+            </p>
+          </div>
+          <div class="col-3">
+            <div class="row d-flex justify-content-end align-items-center">
+              <div class="d-flex justify-content-center">
+                <div>
+                  <div>
+                    <button class="button" (click)="prebinningdata()">
+                      <span class="button-content">Refresh</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5 col-md-4 d-flex justify-content-end align-items-center">
+            <div class="d-flex justify-content-end align-items-center">
+              <pagination-controls (pageChange)="p = $event" [maxSize]="5"></pagination-controls>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>

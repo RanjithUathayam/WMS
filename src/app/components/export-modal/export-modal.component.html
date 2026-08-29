@@ -1,0 +1,29 @@
+<div class="modal-header d-flex justify-content-between">
+  <div>
+    <h4>Export</h4>
+  </div>
+  <div>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+</div>
+<div class="modal-body ml-2">
+  <div class="row">
+    <div class="col-3">
+      <label>File Type</label>
+    </div>
+    <div class="col-6">
+      <select class="form-control" [(ngModel)]="selectedFileType">
+        <option value="excel">EXCEL</option>
+        <option value="pdf">PDF</option>
+        <option value="csv">CSV</option>
+      </select>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button [disabled]="!selectedFileType" class="button ml-3" (click)="close()">
+    <span class="button-content">Submit</span>
+  </button>
+</div>

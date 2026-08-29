@@ -1,0 +1,179 @@
+.machine_number {
+    /* background-color: #D5E0E7;
+    color: #021f31; */
+    color: #326789 !important;
+    font-size: 1.1rem;
+}
+
+.alarm_details {
+    background-color: white;
+    color: red;
+    font-size: 1.1rem;
+}
+
+.red {
+    color: red;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    /* Adjust the background color as needed */
+    z-index: 0;
+}
+
+.blue {
+    color: #326789;
+    font-size: 1.8vh;
+    font-weight: 500;
+}
+
+.set {
+    /* border-top: 10px solid white; */
+    border-left: 10px solid white;
+    border-bottom: 10px solid white;
+}
+
+/* For WebKit Browsers (Chrome, Safari) */
+.set::-webkit-scrollbar {
+    width: 10px;
+}
+
+.set::-webkit-scrollbar-thumb {
+    background-color: black;
+    /* Adjust the scrollbar thumb color */
+    /* border-radius: 8px; */
+}
+
+.set::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+    /* Adjust the scrollbar track color */
+}
+
+.no-data {
+    font-size: 1.6vh !important;
+}
+
+p.even {
+    background-color: #ededed !important;
+    /* Light gray */
+}
+
+p.odd {
+    background-color: #ffffff !important;
+    /* White */
+}
+
+.chart_title {
+    color: #326789;
+    font-size: 1.8vh !important;
+    font-weight: 500;
+}
+
+.chart_card {
+    background-color: white;
+    border-radius: 6px;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.fa-solid {
+    font-size: 1.4rem;
+    color: #326789;
+}
+
+.button {
+    position: relative;
+    overflow: hidden;
+    height: 40px;
+    padding: 0 1.1rem;
+    border-radius: 30px;
+    background: #018db0;
+    color: #fff;
+    border: none;
+    cursor: pointer
+}
+
+.button:hover::before {
+    transform: scaleX(1);
+    color: #fff !important;
+}
+
+.button-content {
+    position: relative;
+    z-index: 1;
+    font-variant: small-caps;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 20px
+}
+
+.button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    width: 100%;
+    height: inherit;
+    border-radius: inherit;
+    background-color: #326789;
+    transition: all .8s
+}
+
+
+.down_icon{
+    position: absolute;
+    bottom: 46%;
+    left: 46%;
+    /* transform: translate(-50%, -50%); */
+    z-index: 1;
+    height: 60px;
+    width: 60px;
+    border-radius: 40px;
+    background-color: #ffffff;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn_download{
+    
+    background: transparent;
+    font-size: 1.5rem !important;
+
+}
+
+.alarm-container
+{
+    min-height: 77.5vh !important;
+    max-height: 77.5vh !important;
+    height: 77.5vh !important;
+    overflow-y: auto !important;
+}
+
+.setHeaderFixed
+{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.setHeight {
+    min-height: 40.3vh !important;
+    max-height: 40.3vh !important;
+    height: 40.3vh !important; 
+    width: 100%; /* Ensure it takes full width */
+}
+
+.chart_card {
+    height: 100%; /* Make sure the chart card fills the container */
+    display: flex; /* Ensure child elements can flex */
+    flex-direction: column; /* Stack children vertically */
+}
+
+#Barchart, #BayChart, #pieChart, #ColumnChart {
+    flex-grow: 1; /* Allow the chart to grow within the card */
+}

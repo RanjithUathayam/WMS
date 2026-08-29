@@ -1,0 +1,47 @@
+.button-content {
+    position: relative;
+    z-index: 1;
+    font-variant: small-caps;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.button-content i {
+    font-family: sans-serif !important;
+    font-style: normal;
+}
+
+.button {
+    position: relative;
+    overflow: hidden;
+    height: 40px;
+    padding: 0 2rem;
+    border-radius: 30px;
+    background: #018DB0;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.button:hover::before {
+    transform: scaleX(1);
+}
+
+.button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    width: 100%;
+    height: inherit;
+    border-radius: inherit;
+    background-color: #326789;
+    transition: all 0.8s;
+}
+.modal-dialog {
+    width: 30% !important;
+    min-width: 30% !important;
+}

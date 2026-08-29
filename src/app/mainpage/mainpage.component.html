@@ -1,0 +1,143 @@
+<section class="nav-shell">
+  <div class="nav-topband">
+    <div class="brand-panel">
+      <button class="sidebar-toggle-btn" type="button" (click)="toggleSidebar()" aria-label="Toggle navigation">
+        <i class="fa fa-bars"></i>
+      </button>
+      <div class="brand-card">
+        <img class="brand-logo" src="../../assets/images/Uathayam_logo.png" alt="Uathayam logo">
+      </div>
+    </div>
+
+    <div class="title-panel">
+      <p class="title-kicker mb-1">Smart Warehouse Console</p>
+      <p class="system-title mb-0">Warehouse Management System</p>
+      <p class="system-version mb-0">v - {{ vesrion }}</p>
+    </div>
+
+    <div class="user-panel">
+      <div class="user-card">
+        <p class="welcome-line mb-1"><i class="fa fa-user-circle mr-1"></i>{{ loggedUname }}</p>
+        <p class="datetime-line mb-0">{{ currentDate }} {{ currentTime }}</p>
+      </div>
+    </div>
+
+    <div class="action-panel">
+      <a class="top-action-btn" [routerLink]="'/mainpage/home'" (click)="clearTabContents()" title="Home">
+        <i class="fa fa-home"></i>
+      </a>
+      <button class="top-action-btn" type="button" title="Reports" (click)="openReportsMenu()" *ngIf="menuRights.transaction_module">
+        <i class="fa fa-bell"></i>
+      </button>
+      <a class="top-action-btn" [routerLink]="'/mainpage/user-control'" title="User Control" *ngIf="menuRights.user_module">
+        <i class="fa fa-user-cog"></i>
+      </a>
+      <button class="top-action-btn top-action-btn--logout" type="button" title="Logout" (click)="logSwal()">
+        <i class="fa fa-power-off"></i>
+      </button>
+    </div>
+  </div>
+</section>
+
+<div class="sidebar-overlay" [class.is-visible]="mobileSidebarOpen" (click)="closeMobileSidebar()"></div>
+
+<section class="page-body page-body--with-sidebar" [class.desktop-sidebar-hidden]="sidebarCollapsed">
+  <aside class="sidebar-shell" [class.mobile-open]="mobileSidebarOpen" [class.desktop-hidden]="sidebarCollapsed">
+    <div class="sidebar-card">
+      <div class="sidebar-mobile-header">
+        <span class="sidebar-mobile-title"><i class="fa fa-th-large mr-2"></i>Navigation</span>
+        <button class="sidebar-close-btn" type="button" (click)="closeMobileSidebar()">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+
+      <div class="status-inline status-inline--sidebar">
+        <span class="status-dot"></span>
+        <span class="status-label">Status</span>
+        <strong class="status-value">{{ craneStatus?.occupiedData?.sentence || 'Ready' }}</strong>
+      </div>
+
+      <div class="sidebar-group" *ngIf="menuRights.master_module">
+        <button class="sidebar-toggle"
+          type="button"
+          (click)="changeTab('Masters'); closeAllMenus()"
+          [ngClass]="{ 'is-open': mySelectedTab === 'Masters' }">
+          <span><i class="fa fa-database mr-2"></i>Masters</span>
+          <i class="fa fa-chevron-down toggle-arrow" [class.rotated]="mySelectedTab === 'Masters'"></i>
+        </button>
+        <div class="sidebar-submenu" *ngIf="mySelectedTab === 'Masters'">
+          <button class="sidebar-link" type="button" (click)="selectTab('item'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'item' }">
+            <i class="fa fa-cubes mr-2"></i>Item Master
+          </button>
+          <button class="sidebar-link" type="button" (click)="selectTab('LocationMaster'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'LocationMaster' }">
+            <i class="fa fa-map-marker mr-2"></i>Location Master
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-group" *ngIf="menuRights.transaction_module">
+        <button class="sidebar-toggle"
+          type="button"
+          (click)="changeTab('Transactions'); closeAllMenus()"
+          [ngClass]="{ 'is-open': mySelectedTab === 'Transactions' }">
+          <span><i class="fa fa-bar-chart mr-2"></i>Reports</span>
+          <i class="fa fa-chevron-down toggle-arrow" [class.rotated]="mySelectedTab === 'Transactions'"></i>
+        </button>
+        <div class="sidebar-submenu" *ngIf="mySelectedTab === 'Transactions'">
+          <button class="sidebar-link" type="button" (click)="selectTab('user_entry_log'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'user_entry_log' }">
+            <i class="fa fa-list-alt mr-2"></i>User Entry Log
+          </button>
+          <button class="sidebar-link" type="button" (click)="selectTab('userlog'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'userlog' }">
+            <i class="fa fa-sign-in mr-2"></i>User Login Report
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-group" *ngIf="menuRights.inventory_module">
+        <button class="sidebar-toggle"
+          type="button"
+          (click)="changeTab('Inventory'); closeAllMenus()"
+          [ngClass]="{ 'is-open': mySelectedTab === 'Inventory' }">
+          <span><i class="fa fa-list-ul mr-2"></i>Inventory</span>
+          <i class="fa fa-chevron-down toggle-arrow" [class.rotated]="mySelectedTab === 'Inventory'"></i>
+        </button>
+        <div class="sidebar-submenu" *ngIf="mySelectedTab === 'Inventory'">
+          <button class="sidebar-link" type="button" (click)="selectTab('Inventory'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'Inventory' }">
+            <i class="fa fa-th-list mr-2"></i>Inventory List
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-group" *ngIf="menuRights.operation_module">
+        <button class="sidebar-toggle sidebar-toggle--primary"
+          type="button"
+          (click)="changeTab('Operations'); closeAllMenus()"
+          [ngClass]="{ 'is-open': mySelectedTab === 'Operations' }">
+          <span><i class="fa fa-cogs mr-2"></i>Operations</span>
+          <i class="fa fa-chevron-down toggle-arrow" [class.rotated]="mySelectedTab === 'Operations'"></i>
+        </button>
+        <div class="sidebar-submenu" *ngIf="mySelectedTab === 'Operations'">
+          <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('prebinning_aaproval'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'prebinning_aaproval' }">
+            <i class="fa fa-check-circle mr-2"></i>Pre-Binning Approval
+          </button>
+          <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('operation_binwisePrebinningReject'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'operation_binwisePrebinningReject' }">
+            <i class="fa fa-times-circle mr-2"></i>Binwise Pre-Binning Reject
+          </button>
+          <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('grn_pushing'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'grn_pushing' }">
+            <i class="fa fa-upload mr-2"></i>GRN Pushing
+          </button>
+          <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('prebinning_status'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'prebinning_status' }">
+            <i class="fa fa-info-circle mr-2"></i>Pre-Binning Status
+          </button>
+          <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('label_print'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'label_print' }">
+            <i class="fa fa-qrcode mr-2"></i>Label Print
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="content-shell">
+    <router-outlet></router-outlet>
+  </div>
+</section>

@@ -1,0 +1,292 @@
+<section class="gk-section">
+  <div class="container-fluid mt-2 gk-container">
+
+    <div class="row mx-1 mt-2 mb-1 align-items-center">
+      <div class="col-12 d-flex">
+        <button class="button mr-2 view-toggle" [class.view-toggle-active]="activeView === 'list'" (click)="switchView('list')">
+          <span class="button-content">Location List</span>
+        </button>
+        <button class="button view-toggle" [class.view-toggle-active]="activeView === 'structure'" (click)="switchView('structure')">
+          <span class="button-content">Manage Structure</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ VIEW 1: LOCATION LIST ============ -->
+    <div class="row page_height mx-1 my-2 py-2 gk-page" *ngIf="activeView === 'list'">
+      <div class="col-12 gk-h100p">
+
+        <div class="row mb-2">
+          <div class="col-md-6 py-1">
+            <label>Warehouse <span class="text-danger">*</span></label>
+            <select class="form-control" [(ngModel)]="filters['WarehouseCode']" (change)="onFilterWarehouseChange()">
+              <option value="">Select Warehouse</option>
+              <option *ngFor="let wh of warehouseListCache" [value]="wh.warehouseCode">{{ wh.warehouseName }} ({{ wh.warehouseCode }})</option>
+            </select>
+          </div>
+          <div class="col-md-6 py-1">
+            <label>Row <span class="text-danger">*</span></label>
+            <select class="form-control" [(ngModel)]="filters['RowCode']" (change)="applyFilters()" [disabled]="!filters['WarehouseCode']">
+              <option value="">Select Row</option>
+              <option *ngFor="let row of filterRowOptions" [value]="row.rowCode">{{ row.rowCode }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-container gk-table-container" [ngStyle]="{ 'border': locationList?.length == 0 ? '2px solid #dee2e6' : 'none' }">
+          <table class="table table-bordered table-striped mb-2">
+            <thead class="fixed-header">
+              <tr>
+                <th>S.No</th>
+                <th>Location Code</th>
+                <th>Warehouse</th>
+                <th>Row</th>
+                <th>Position No</th>
+                <th>Status</th>
+                <th *ngIf="btnRights?.master_location_modifies">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of pagedLocationList; let i = index">
+                <td class="col-sno">{{ (p - 1) * itemsPerPage + i + 1 }}</td>
+                <td>{{ item.locationCode }}</td>
+                <td>{{ item.warehouseName }}</td>
+                <td>{{ item.rowCode }}</td>
+                <td>{{ item.positionNo }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="'status-' + (item.status | lowercase)">{{ item.status }}</span>
+                </td>
+                <td *ngIf="btnRights?.master_location_modifies">
+                  <span *ngIf="item.status !== 'Occupied'; else occupiedTpl" class="status-badge pointer"
+                    [ngClass]="item.status == 'Active' ? 'status-available' : 'status-inactive'"
+                    (click)="changeLocationStatus(item)">
+                    {{ item.status == 'Active' ? 'Deactivate' : 'Activate' }}
+                  </span>
+                  <ng-template #occupiedTpl><span class="text-muted">System-set</span></ng-template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="no-records-message" *ngIf="!filters['WarehouseCode'] || !filters['RowCode']">
+            <div>
+              <p>Select a warehouse and row to view locations</p>
+            </div>
+          </div>
+          <div class="no-records-message" *ngIf="(filters['WarehouseCode'] && filters['RowCode']) && locationList?.length == 0">
+            <div>
+              <p>No Records Found</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-lg-2 d-flex justify-content-between align-items-center">
+            <p class="mb-0 total_records">Records : <span>{{ totalCount }}</span></p>
+          </div>
+          <div class="col-lg-10 d-flex justify-content-end align-items-center manual-pager">
+            <button class="btn-page" [disabled]="p <= 1" (click)="goToPage(p - 1)"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+            <span class="mx-2">Page {{ p }} of {{ totalPages }}</span>
+            <button class="btn-page" [disabled]="p >= totalPages" (click)="goToPage(p + 1)"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ VIEW 2: MANAGE STRUCTURE ============ -->
+    <div class="row page_height mx-1 my-2 py-2 gk-page" *ngIf="activeView === 'structure'">
+      <div class="col-12 gk-h100p">
+        <div class="row structure-row">
+
+          <!-- Warehouses panel -->
+          <div class="col-md-4 structure-panel">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5>Warehouses</h5>
+              <button *ngIf="btnRights?.master_location_creates" class="button" (click)="openWarehouseSidebar(null)">
+                <span class="button-content"><i class="fa fa-plus-square mr-1" aria-hidden="true"></i>Add</span>
+              </button>
+            </div>
+            <ul class="structure-list">
+              <li *ngFor="let wh of warehouseListCache" [class.active]="selectedWarehouse?.warehouseCode === wh.warehouseCode" (click)="selectWarehouse(wh)">
+                <span>{{ wh.warehouseName }} ({{ wh.warehouseCode }})</span>
+                <span class="structure-actions">
+                  <i *ngIf="btnRights?.master_location_modifies" class="fa fa-edit pointer" (click)="$event.stopPropagation(); openWarehouseSidebar(wh)"></i>
+                  <span class="status-badge pointer" [ngClass]="wh.Status == 1 ? 'status-available' : 'status-inactive'"
+                    (click)="$event.stopPropagation(); btnRights?.master_location_modifies && changeWarehouseStatus(wh)">
+                    {{ wh.Status == 1 ? 'Active' : 'Inactive' }}
+                  </span>
+                </span>
+              </li>
+              <li *ngIf="warehouseListCache?.length == 0" class="text-muted no-click">No Warehouses</li>
+            </ul>
+          </div>
+
+          <!-- Rows panel -->
+          <div class="col-md-4 structure-panel">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5>Rows <span *ngIf="selectedWarehouse">- {{ selectedWarehouse.warehouseCode }}</span></h5>
+              <button *ngIf="btnRights?.master_location_creates && selectedWarehouse" class="button" (click)="openRowSidebar(null)">
+                <span class="button-content"><i class="fa fa-plus-square mr-1" aria-hidden="true"></i>Add</span>
+              </button>
+            </div>
+            <div *ngIf="!selectedWarehouse" class="text-muted">Select a warehouse</div>
+            <ul class="structure-list" *ngIf="selectedWarehouse">
+              <li *ngFor="let row of rowList" [class.active]="selectedRow?.rowCode === row.rowCode" (click)="selectRow(row)">
+                <span>Row {{ row.rowCode }}</span>
+                <span class="structure-actions">
+                  <i *ngIf="btnRights?.master_location_modifies" class="fa fa-edit pointer" (click)="$event.stopPropagation(); openRowSidebar(row)"></i>
+                  <span class="status-badge pointer" [ngClass]="row.Status == 1 ? 'status-available' : 'status-inactive'"
+                    (click)="$event.stopPropagation(); btnRights?.master_location_modifies && changeRowStatus(row)">
+                    {{ row.Status == 1 ? 'Active' : 'Inactive' }}
+                  </span>
+                </span>
+              </li>
+              <li *ngIf="rowList?.length == 0" class="text-muted no-click">No Rows</li>
+            </ul>
+          </div>
+
+          <!-- Positions panel -->
+          <div class="col-md-4 structure-panel">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5>Positions <span *ngIf="selectedRow">- Row {{ selectedRow.rowCode }}</span></h5>
+              <button *ngIf="btnRights?.master_location_creates && selectedRow" class="button" (click)="openPositionSidebar()">
+                <span class="button-content"><i class="fa fa-plus-square mr-1" aria-hidden="true"></i>Add</span>
+              </button>
+            </div>
+            <div *ngIf="!selectedRow" class="text-muted">Select a row</div>
+            <ul class="structure-list" *ngIf="selectedRow">
+              <li *ngFor="let pos of positionList" class="no-click">
+                <span>{{ pos.locationCode }} (Pos {{ pos.positionNo }})</span>
+                <span class="structure-actions">
+                  <span class="status-badge" [ngClass]="'status-' + (pos.status | lowercase)">{{ pos.status }}</span>
+                </span>
+              </li>
+              <li *ngIf="positionList?.length == 0" class="text-muted no-click">No Positions</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ SIDEBAR (Warehouse / Row / Position forms) ============ -->
+<section class="sidebar close" id="locationMasterSidebar">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+
+        <div *ngIf="sidebarMode === 'warehouse'">
+          <div class="justify-content-between align-items-center d-flex py-2">
+            <p class="sidebar-head">{{ editId == '' ? 'Add New Warehouse' : 'Edit Warehouse' }}</p>
+            <button class="button close-icon" (click)="closeSidebar()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form [formGroup]="warehouseForm">
+            <div class="form-group">
+              <div class="py-2">
+                <label>Warehouse Code <span class="text-danger">*</span> :</label>
+                <input type="text" formControlName="WarehouseCode" [ngClass]="{ 'is-invalid': submitted && wf['WarehouseCode'].errors }">
+                <div *ngIf="submitted && wf['WarehouseCode'].errors" class="invalid-feedback">
+                  <div *ngIf="wf['WarehouseCode'].errors['required']">Warehouse Code is required</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label>Warehouse Name <span class="text-danger">*</span> :</label>
+                <input type="text" formControlName="WarehouseName" [ngClass]="{ 'is-invalid': submitted && wf['WarehouseName'].errors }">
+                <div *ngIf="submitted && wf['WarehouseName'].errors" class="invalid-feedback">
+                  <div *ngIf="wf['WarehouseName'].errors['required']">Warehouse Name is required</div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-end align-items-center pt-4">
+                <button class="button mr-2" type="button" (click)="submitWarehouse()">
+                  <span class="button-content">Submit</span>
+                </button>
+                <button class="button" type="button" (click)="warehouseForm.reset()">
+                  <span class="button-content">Clear</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div *ngIf="sidebarMode === 'row'">
+          <div class="justify-content-between align-items-center d-flex py-2">
+            <p class="sidebar-head">{{ editId == '' ? 'Add New Row' : 'Edit Row' }}</p>
+            <button class="button close-icon" (click)="closeSidebar()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form [formGroup]="rowForm">
+            <div class="form-group">
+              <div class="py-2">
+                <label>Warehouse :</label>
+                <input type="text" [value]="selectedWarehouse?.warehouseName" disabled>
+              </div>
+              <div class="py-2">
+                <label>Row Code <span class="text-danger">*</span> :</label>
+                <input type="text" formControlName="RowCode" [ngClass]="{ 'is-invalid': submitted && rf['RowCode'].errors }">
+                <div *ngIf="submitted && rf['RowCode'].errors" class="invalid-feedback">
+                  <div *ngIf="rf['RowCode'].errors['required']">Row Code is required</div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-end align-items-center pt-4">
+                <button class="button mr-2" type="button" (click)="submitRow()">
+                  <span class="button-content">Submit</span>
+                </button>
+                <button class="button" type="button" (click)="rowForm.reset()">
+                  <span class="button-content">Clear</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div *ngIf="sidebarMode === 'position'">
+          <div class="justify-content-between align-items-center d-flex py-2">
+            <p class="sidebar-head">Add Pallet Position</p>
+            <button class="button close-icon" (click)="closeSidebar()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form [formGroup]="positionForm">
+            <div class="form-group">
+              <div class="py-2">
+                <label>Warehouse / Row :</label>
+                <input type="text" [value]="(selectedWarehouse?.warehouseCode || '') + ' / Row ' + (selectedRow?.rowCode || '')" disabled>
+              </div>
+              <div class="py-2">
+                <label>Position From <span class="text-danger">*</span> :</label>
+                <input type="number" formControlName="PositionFrom" [ngClass]="{ 'is-invalid': submitted && pf['PositionFrom'].errors }">
+                <div *ngIf="submitted && pf['PositionFrom'].errors" class="invalid-feedback">
+                  <div *ngIf="pf['PositionFrom'].errors['required']">Position number is required</div>
+                  <div *ngIf="pf['PositionFrom'].errors['min']">Position number must be at least 1</div>
+                </div>
+              </div>
+              <div class="py-2">
+                <label>Position To (optional, for bulk add) :</label>
+                <input type="number" formControlName="PositionTo">
+              </div>
+              <div class="py-2" *ngIf="positionCodePreview">
+                <label>Location Code Preview :</label>
+                <input type="text" [value]="positionCodePreview" disabled>
+              </div>
+              <div class="d-flex justify-content-end align-items-center pt-4">
+                <button class="button mr-2" type="button" (click)="submitPosition()">
+                  <span class="button-content">Submit</span>
+                </button>
+                <button class="button" type="button" (click)="positionForm.reset()">
+                  <span class="button-content">Clear</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>

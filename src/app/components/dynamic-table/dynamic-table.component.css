@@ -1,0 +1,317 @@
+CSS
+ 
+ 
+ 
+ 
+label {
+    font-weight: bold;
+    color: #018DB0;
+}
+ 
+input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+ 
+.button:hover {
+    transform: scaleX(1) !important;
+    color: white !important;
+}
+ 
+.filter-input {
+    width: 100%;
+    height: 100% !important;
+    box-sizing: border-box;
+    /* padding: 8px; */
+    border-radius: 20px;
+    outline: none;
+    max-height: 4vh !important;
+}
+ 
+.filter-input ::placeholder {
+    font-size: 1.8vh !important;
+}
+ 
+.filter-input::-webkit-input-placeholder {
+    font-size: 1.8vh !important;
+}
+ 
+.filter-input::-moz-placeholder {
+    font-size: 1.8vh !important;
+}
+ 
+.filter-input:-ms-input-placeholder {
+    font-size: 1.8vh !important;
+}
+ 
+.filter-input::placeholder {
+    font-size: 1.8vh !important;
+}
+ 
+:root {
+    --background: #4285f4;
+    --icon-color: #344955;
+    --width: 50px;
+    --height: 50px;
+    --border-radius: 100%;
+}
+ 
+.table-container {
+    max-width: 100%;
+    overflow-x: auto;
+    /* max-height: calc(100vh - 260px); */
+    min-height: 72vh !important;
+    height: auto !important;
+    /* height: auto !important; */
+    width: 100%;
+    max-width: 100vw;
+    /* Ensure the table container takes up the full width of the viewport */
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: #F2F2F2 !important;
+    position: relative;
+    /* border: 1px solid black !important; */
+}
+ 
+.no-records-message {
+    position: absolute;
+    top: 50%;
+    /* Center vertically */
+    left: 50%;
+    /* Center horizontally */
+    transform: translate(-50%, -50%);
+    /* Center precisely */
+}
+ 
+ 
+table {
+    width: 100%;
+}
+ 
+th,
+td {
+    white-space: nowrap;
+}
+ 
+th,
+td {
+    /* Adjust padding as needed */
+    border: 1px solid #ccc;
+    /* Add border to cells */
+}
+ 
+.no-wrap {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+ 
+.fixed-header th {
+    background: #326789;
+    /* Header background color */
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+ 
+.fixed-header th,
+.fixed-header td {
+    padding: 10px;
+    /* Adjust padding as needed */
+}
+ 
+.col-sno {
+    min-width: 50px;
+    /* S.No column width */
+}
+ 
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+ 
+.table-container::-webkit-scrollbar-thumb {
+    background-color: #326789;
+    border-radius: 4px;
+}
+ 
+.table-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+ 
+.part_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+ 
+.total_records {
+    font-size: 2.3vh !important;
+    color: #018DB0;
+}
+ 
+.no_records {
+    font-size: 2.3vh !important;
+    color: #326789;
+}
+ 
+.btn-main {
+    position: absolute !important;
+    /* width: 20vh !important; */
+}
+ 
+ 
+.btn-info {
+    min-width: 6vw !important;
+    border-radius: 30px !important;
+}
+ 
+@media (max-width: 1367px) {
+    .btn-main {
+        width: 20vh !important;
+    }
+ 
+}
+ 
+.table_head_font {
+    font-size: 2vh !important;
+    height: 4vh !important;
+    max-height: 4vh !important;
+    vertical-align: middle !important;
+}
+ 
+.table_data_font {
+    /* font-size: 1.8vh !important; */
+    font-size: 1.9vh !important;
+    padding: 1.2vh 1.2vh !important;
+    height: 4vh !important;
+    max-height: 4vh !important;
+    vertical-align: middle !important;
+}
+ 
+.gk-section {
+    height: 78vh !important;
+}
+ 
+.gk-container {
+    padding: 0.8vh 0.5vw !important;
+    border-radius: 0.5rem !important;
+    width: 99.5% !important;
+}
+ 
+.gk-container2 {
+    /* padding: 0.8vh 0.5vw !important; */
+    background-color: white !important;
+    border-radius: 0.5rem !important;
+    height: 74vh !important;
+    /* overflow-y: scroll !important; */
+}
+ 
+@media(max-width: 1024px) {
+    .gk-section {
+        height: 77vh !important;
+    }
+ 
+    .gk-container2 {
+        height: 73vh !important;
+    }
+ 
+    .table-container {
+        min-height: 71vh !important;
+        height: auto !important;
+    }
+ 
+    :host ::ng-deep .ngx-pagination {
+        padding-left: 0px !important;
+        font-size: 1rem !important;
+        padding: 0px !important;
+    }
+ 
+    .table_data_font {
+        padding: 1vh 2vh !important;
+    }
+}
+ 
+.gk-container2::-webkit-scrollbar {
+    height: 8px;
+    width: 8px !important;
+}
+ 
+.gk-container2::-webkit-scrollbar-thumb {
+    background-color: #326789 !important;
+}
+ 
+.gk-container2::-webkit-scrollbar-track {
+    background-color: #f1f1f1 !important;
+}
+ 
+.table-container {
+    position: relative;
+    max-height: 400px;
+    /* Adjust as needed */
+    overflow-y: auto;
+}
+ 
+.fixed-header thead th {
+    position: sticky;
+    top: 0;
+    /* Fixes header to the top of the container */
+    background-color: white;
+    z-index: 1;
+    border-bottom: 2px solid #dee2e6;
+}
+ 
+.button-content {
+    font-size: 1.9vh !important;
+    padding: 0px !important;
+    line-height: 10px;
+}
+ 
+ 
+/* Expandable Row Highlight */
+.expandable-row {
+    cursor: pointer;
+}
+ 
+.expandable-row.expanded {
+    background-color: #f0f0f0;
+}
+ 
+/* Expanded Nested Table */
+.expanded-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+ 
+.expanded-table th,
+.expanded-table td {
+    padding: 5px;
+    border: 1px solid #ddd;
+}
+ 
+.expanded-container {
+    width: 100%;
+    overflow-x: auto;
+    background: #f9f9f9;
+    padding: 5px;
+}
+ 
+.expanded-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+ 
+.expanded-table th,
+.expanded-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.color-highlight{
+    background-color: red !important;
+    color: white !important;
+}

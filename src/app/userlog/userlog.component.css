@@ -1,0 +1,125 @@
+/* Optional: Add styling for labels or customize the appearance as needed */
+label {
+    font-weight: bold;
+}
+
+* {
+    font-variant: small-caps !important;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0px;
+    right: 0;
+    height: 100%;
+    width: 25%;
+    background: #e6e6e6;
+    z-index: 100;
+    transition: all 0.5s ease;
+    border-left: 2px solid #018DB0;
+}
+
+.sidebar.close {
+    width: 0px;
+}
+
+.page_height {
+    background-color: white;
+    /* height: 80vh; */
+    border-radius: 6px;
+}
+
+@media (max-width: 1024px) {
+    .page_height {
+        height: 74vh;
+    }
+}
+
+.closesidebar {
+    padding: 0px !important;
+    width: 40px;
+    height: 40px;
+}
+
+.closesidebar span {
+    font-size: 2rem;
+}
+
+.storage_filter {
+    font-size: 1.4rem;
+    color: #018DB0;
+    font-weight: 500;
+}
+
+.ngx-pagination .current {
+    padding: 0.1875rem 0.625rem;
+    background: #018DB0 !important;
+    color: #fefefe;
+    cursor: default;
+    font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination {
+    padding-left: 0px;
+    font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination .current,
+:host ::ng-deep .btn-info {
+    background: #17a2b8 !important;
+    border: transparent;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+:host ::ng-deep .ngx-pagination .current:hover {
+    background: #17a2b8 !important;
+    border-radius: 6px;
+    border: transparent;
+    font-size: 1rem;
+}
+
+.filter_label {
+    font-size: 1.1rem;
+    color: #018DB0;
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+}
+
+input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btns_sidebar {
+    column-gap: 14px;
+}
+
+.filter_icon {
+    /* width: 8rem; */
+    position: absolute;
+    top: -4.3vh;
+    display: flex;
+    left: 90%;
+    text-align: center;
+    /* width: 6vw; */
+    padding: 2vh 2vw !important;
+    height: 4vh !important;
+    align-items: center;
+}
+
+@media (max-width: 1024px) {
+    .filter_icon{
+        top: -8.8vh !important;
+        left: 87% !important; 
+        background-color: white !important;
+    }
+    .filter_icon i
+    {
+        background-color: white !important;
+    }
+}
+

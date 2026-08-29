@@ -1,0 +1,76 @@
+<section>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <p class="d-flex m-0 px-4 py-1 filter_icon" (click)="openSidebar()">
+            <span>Filter</span>
+            <i class="fa fa-filter d-flex justify-content-center align-items-center mt-1 ml-3" aria-hidden="true"></i>
+          </p>
+          <div class=" ">
+            <app-dynamic-table [tableHeader]="tableHeader" 
+              [tableData]="tableData" [exportTitle]="exportTitle" 
+              [isShowExportBtn]="isShowExportBtn"></app-dynamic-table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  
+  <div *ngIf="flagset" class="dialog_scrim" (click)="falseSet()">
+  </div>
+  
+  <section class="sidebar close sidebar_Request" id="sidebar">
+    <div class="container-fluid" [formGroup]="filterForm">
+      <div class="row d-inline">
+        <!-- Header and close button -->
+        <div class="justify-content-between align-items-center d-flex">
+          <div>
+            <p class="storage_filter">Load Station Filter</p>
+          </div>
+          <div>
+            <button class="button closesidebar" (click)="closesidebar()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+  
+        <div class="positionset p-2 py-3">
+            <label class="filter_label w-100" for="date">From Date : </label>
+            <input type="date" id="fromDate" name="date" [(ngModel)]="fromDate" [value]="fromDate" formControlName="fromDate"
+              max="{{ maxDate | date: 'yyyy-MM-dd' }}">
+          </div>
+
+          <div class="positionset p-2 py-3">
+            <label class="filter_label w-100" for="date">To Date : </label>
+            <input type="date" id="toDate" name="date" [(ngModel)]="toDate" [value]="toDate" formControlName="toDate"
+              min="{{ minDate | date: 'yyyy-MM-dd' }}" max="{{ maxDate | date: 'yyyy-MM-dd' }}">
+          </div> 
+
+        <!-- Type Filter -->
+        <!-- <div class="positionset p-2 py-3">
+          <label class="filter_label w-100" for="type">Scan Status: </label>
+          <div class="ng-autocomplete">
+            <ng-select2 class="data_place"
+                        [data]="scannedStatus"
+                        placeholder="Select Type"
+                        [options]="options"
+                        (valueChanged)="selectType($event)"
+                        formControlName="scanStatus">
+            </ng-select2>
+          </div>
+        </div> -->
+  
+        <!-- Apply and Clear Buttons -->
+        <div class="positionset p-2 py-3 d-flex justify-content-end align-items-center">
+          <button class="button" (click)="searchData()">
+            <span class="button-content">Apply</span>
+          </button>
+          <button class="button ml-3" (click)="clear()">
+            <span class="button-content">Clear</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+  

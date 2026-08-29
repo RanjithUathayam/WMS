@@ -1,0 +1,63 @@
+<section class="gk-section mb-0">
+    <div class="container-fluid mt-2 gk-container">
+      <div class="row mx-1 my-2 py-2 gk-page">
+        <div class="col-12 gk-h100p">
+          <div class="table-container gk-table-container" [ngStyle]="{ 'border': '2px solid #dee2e6' }" #tableBody>
+            <table class="table table-bordered table-striped mb-2">
+              <thead class="fixed-header">
+                <tr style="width: 100%;">
+                  <th>S.No</th>
+                  <!-- <th>Device Ref ID</th> -->
+                  <th>Device ID</th>
+                  <th>Device Model</th>
+                  <th>Device OS</th>
+                  <th>OS Version</th>
+                  <!-- <th>Created Date</th> -->
+                  <!-- <th>Created By</th> -->
+                  <th>Updated Date</th>
+                  <th>Updated By</th>
+                  <th>Current User</th>
+                  <th>Rights</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="width: 100%;" *ngFor="let item of deviceData; let i = index;">
+                  <td>{{ i + 1 }}</td>
+                  <!-- <td>{{ item.deviceRefID }}</td> -->
+                  <td>{{ item.deviceId }}</td>
+                  <td>{{ item.deviceModel }}</td>
+                  <td>{{ item.deviceOS }}</td>
+                  <td>{{ item.deviceOSVersion }}</td>
+                  <!-- <td>{{ item.CreatedDate | date: 'yyyy-MM-dd HH:mm:ss' }}</td> -->
+                  <!-- <td>{{ item.CreatedBy }}</td> -->
+                  <td>{{ item.UpdatedDate | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
+                  <td>{{ item.UpdatedBy }}</td>
+                  <td>{{ item.currentUser }}</td>
+                  <td>
+                    <div class="checkbox justify-content-center align-items-center d-flex">
+                      <input
+                        id="cbx{{item.deviceId}}"
+                        class="cbx"
+                        (click)="toggleRights(item)"
+                        type="checkbox"
+                        [checked]="item.Rights"
+                      />
+                      <label class="toggle" for="cbx{{item.deviceId}}"><span></span></label>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="row d-flex justify-content-start align-items-center">
+            <div class="col-lg-3 col-md-2 justify-content-start align-items-center d-flex">
+              <p class="mb-0 d-flex total_records"> 
+                <span class="d-lg-block">Total Number of Records: {{ deviceData?.length }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  

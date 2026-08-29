@@ -1,0 +1,82 @@
+<section>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <span class="refreshDate">Last Updated On: &nbsp;
+            <!-- Full date format for large screens and above -->
+            <span class="setDate d-none d-xl-block">{{ lastUpdatedDateTime | date: 'dd-MM-yyyy hh:mm:ss a' }}</span>
+          
+            <!-- Only time format for medium screens -->
+            <span class="setDate d-none d-sm-block d-xl-none">{{ lastUpdatedDateTime | date: 'hh:mm:ss a' }}</span> 
+            &nbsp;&nbsp;
+            
+            <button class="button refresh-button" (click)="userEntryLogData()">
+              <span class="button-content setbtncontent">
+                <i class="fa fa-refresh mr-1" aria-hidden="true"></i>
+              </span>
+            </button>
+          </span>
+          <p class="d-flex m-0 px-4 py-1 filter_icon" (click)="openSidebar()">
+            <span>Filter</span>
+            <i class="fa fa-filter d-flex justify-content-center align-items-center mt-1 ml-3" aria-hidden="true"></i>
+          </p>
+          <div class="">
+            <app-dynamic-table [tableHeader]="tableHeader" [userEntryFilter]="userEntryStatus"
+              [tableData]="userEntryList" [exportTitle]="exportTitle" [exportApi]="searchApiCall"
+              [isShowExportBtn]="isShowExportBtn"></app-dynamic-table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <div *ngIf="flagset" class="dialog_scrim" (click)="falseSet()">
+  </div>
+  
+  <section class="sidebar close" id="sidebar">
+    <div class="container-fluid">
+      <div class="row d-inline">
+        <div class="justify-content-between align-items-center d-flex">
+          <div>
+            <p class="storage_filter">User Entry Log Filter</p>
+          </div>
+          <div>
+            <button class="button closesidebar" (click)="closesidebar()">
+              <span class="button-content" aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+        <div class="positionset p-2 py-3">
+          <label class="filter_label w-100" for="date">From : </label>
+          <input type="date" id="fromDate" name="date" [(ngModel)]="fromDate" [value]="fromDate" (change)="selectDate()"
+            max="{{ maxDate | date: 'yyyy-MM-dd' }}">
+        </div>
+        <div class="positionset p-2 py-3">
+          <label class="filter_label w-100" for="date">To : </label>
+          <input type="date" id="toDate" name="date" [(ngModel)]="toDate" [value]="toDate" (change)="selectDate()"
+            min="{{ minDate | date: 'yyyy-MM-dd' }}" max="{{ maxDate | date: 'yyyy-MM-dd' }}">
+        </div>
+        <!-- <div class="positionset p-2 py-3">
+          <label class="filter_label w-100" for="date">Type : </label> 
+          <div class="ng-autocomplete">
+            <ng-select2 class="data_place" [data]="typeValue" placeholder="Select Type" value=""
+              [options]="options" (valueChanged)='selectType($event)'></ng-select2>
+          </div>
+        </div> --> 
+        
+  
+        <div class="positionset p-2 mt-3 ml-3  d-flex justify-content-end align-items-center btns_sidebar">
+          <button class="button" (click)="userEntryLogData(); changeFromTo()">
+            <span class="button-content">Apply</span>
+          </button>
+          <button class="button" (click)="clear()">
+            <span class="button-content">Clear</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  
+  
+  

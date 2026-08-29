@@ -1,0 +1,28 @@
+<section class="top-bar">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-2 col-md-2 pt-2 logo">
+                <img src="./assets/images/Uathayam_logo.png" class="col-lg-12 img-responsive">
+            </div>
+            <div class="col-lg-5 col-md-5">
+                <h3 class="col-lg-12 col-md-12 pt-1">WAREHOUSE MANAGEMENT SYSTEM</h3>
+                <p class="col-lg-12 col-md-12 version">B and B Textiles<span class="text-right offset-md-6">V22.9.1</span></p>
+            </div>
+            <div class="col-lg-2 col-md-2">
+                <div class="row">
+                <p class="col-lg-12 pt-4"><span id="date"></span> &nbsp; 
+                <span  id = "clock" onload="currentTime()"></span></p>
+                </div>
+              </div>
+              <div class="col-lg-3 col-md-3  text-right  pt-4">
+                <a [routerLink]="'/home'" href="#"> <i class="fa fa-home"></i></a>
+                <a [routerLink]="'/error_history'" href="#"><i class="fa fa-bell"></i>
+                 <span class="stack" id="note">40</span></a>
+                 <a [routerLink]="'/rejectedpallet_history'" href="#"><i class="fa fa-file"></i></a>
+                 <a [routerLink]="'/equipment_status'" href="#"><i class="fa fa-info-circle"></i></a>
+                 <a [routerLink]="'/warehouse_customization'" href="#"><i class="fa fa-cog"></i></a>
+                <a [routerLink]="'/login'" href="#"> <i class="fa fa-power-off"></i></a>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,18 @@
+<router-outlet></router-outlet>
+
+<div class="page-overlay-loader" id="loaderPage" style="display: none;">
+    <img style="padding-left: 50%;padding-top: 25%;" src="../assets/images/page_loading.gif" alt="" class="loder-center">
+    <label style="padding-left: 46%; font-size: 1.2rem; padding-top: 2%; color: #185c87 !important;" class="loder-text" id="loaderText"></label>
+</div>
+
+
+<!-- <div *ngIf="isLandscape; else portraitMode"> 
+    <router-outlet></router-outlet>
+</div> -->
+  
+  <ng-template #portraitMode>
+    <div class="landscape-warning">
+      <h1>Please rotate your device to landscape mode.</h1>
+    </div>
+  </ng-template>
+  

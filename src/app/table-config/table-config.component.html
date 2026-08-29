@@ -1,0 +1,121 @@
+<section>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 btn-ctnr d-flex justify-content-end mt-3">
+                <button class="btn-add btn btn-primary" data-toggle="modal" data-target="#myModal3">
+                    ADD
+                </button>
+            </div>
+            <div class="col-12">
+                <table class="table table-bordered table-striped mb-2 mt-2">
+                    <thead class="fixed-header">
+                      <tr style="width: 100%;">
+                        <th>Header</th>
+                        <th>Data field</th>
+                        <th>Action</th>
+                        <!-- <th
+                          *ngIf="btnRights?.master_item_deletes == true || btnRights?.master_item_modifies == true">
+                          Action</th> -->
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style="width: 100%;">
+                        <td>WMS</td>
+                        <td>Pallets</td>
+                        <td style="white-space: nowrap">
+                            <a class="btn btn-sm btn-primary mr-1">Edit</a>
+                            <button class="btn btn-sm btn-danger btn-delete-user">
+                                <span>Delete</span>
+                            </button>
+                        </td>
+                      </tr>
+                      <tr style="width: 100%;">
+                        <td>WMS</td>
+                        <td>Pallets</td>
+                        <td style="white-space: nowrap">
+                            <a class="btn btn-sm btn-primary mr-1">Edit</a>
+                            <button class="btn btn-sm btn-danger btn-delete-user">
+                                <span>Delete</span>
+                            </button>
+                        </td>
+                      </tr>
+                      <tr style="width: 100%;">
+                        <td>WMS</td>
+                        <td>Pallets</td>
+                        <td style="white-space: nowrap">
+                            <a class="btn btn-sm btn-primary mr-1">Edit</a>
+                            <button class="btn btn-sm btn-danger btn-delete-user">
+                                <span>Delete</span>
+                            </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="modal" id="myModal3">
+      <div class="modal-dialog">
+        <section class="bg-white m-4 br-6 tableConfig">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 d-flex justify-content-between tbl-tit pl-0 pt-0">
+                        <div class="col-11 pl-0 pt-0">
+                            <p class="choose_aisle">Add Table Details</p>
+                        </div>
+                        <div class="col-1 justify-content-center align-items-center d-flex">
+                            <!-- <div class="mt-0"> -->
+                            <button class="button btn_close" type="button" data-dismiss="modal" aria-label="Close">
+                                <span class="button-content close_size" aria-hidden="true">&times;</span>
+                            </button>
+                            <!-- </div> -->
+                        </div>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <span style="font-size: x-large;">Table Title : </span>
+                        <input #outsideInput type="text" class="txt_input">
+                    </div>
+                    <div class="col-12 mb-2 bg-white mt-2 d-flex justify-content-center">
+                        <table class="table table-bordered table-striped mb-2 mt-3 tbl_add">
+                            <thead class="fixed-header">
+                                <tr style="width: 100%;">
+                                    <th>Header</th>
+                                    <th>Data</th>
+                                    <th>Search</th>
+                                    <th>Action</th> 
+                                </tr>
+                            </thead>
+                            <tbody cdkDropList (cdkDropListDropped)="drop($event)">
+                                <ng-container *ngFor="let row of tableData; let i = index">
+                                    <tr cdkDrag>
+                                        <td><input type="text" class="txt_input" [(ngModel)]="row.header"></td>
+                                        <td><input type="text" class="txt_input" [(ngModel)]="row.data"></td>
+                                        <td>
+                                            <select [(ngModel)]="row.search">
+                                                <option [ngValue]="true">True</option>
+                                                <option [ngValue]="false">False</option>
+                                            </select>
+                                        </td>
+                                        <td style="width:250px;" class="d-flex justify-content-between">
+                                            <button class="btn btn-primary btn_add" (click)="addRowAfterIndex(i)">ADD</button>
+                                            <button class="btn btn-danger btn_delete" (click)="deleteRow(i)">DELETE</button>
+                                        </td>
+                                    </tr>
+                                </ng-container>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-12 pb-2 d-flex justify-content-end">
+                        <button class="button button-primary btn_submit mr-2" (click)="submitForm()">SUBMIT</button>
+                        <button class="button button-primary btn_clear" (click)="clearFields()">CLEAR</button>
+                    </div>
+                </div>
+            </div>
+                               
+        </section>
+      </div>
+    </div>
+  </section>

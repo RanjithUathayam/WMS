@@ -1,0 +1,369 @@
+.nav-pills .nav-link.active {
+    background-color: #F6D25F !important;
+    color: #326789 !important;
+    position: relative;
+    height: 40px;
+    border: none;
+    border-radius: 0px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 500;
+    margin-left: 0px;
+    margin-right: 20px;
+}
+
+.nav-pills .nav-link.active::before {
+    content: "";
+    position: absolute;
+    right: -20px;
+    bottom: 0;
+    border-radius: 0px;
+    width: 0;
+    height: 0;
+    border-left: 20px solid #F6D25F;
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+}
+
+.nav-pills .nav-link:not(.active) {
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 0px;
+    height: 40px;
+    border-right: 1px solid white;
+}
+
+.part_table {
+    display: inline-table !important;
+}
+
+.form-group {
+    /* display: flex; */
+    align-items: end;
+}
+
+table thead {
+    height: 50px;
+    font-size: 1.2rem;
+    background-color: #326789;
+    color: white;
+}
+
+table thead th {
+    /* text-align: center; */
+    border: 1px solid whitesmoke;
+}
+
+table tbody tr td {
+    padding-left: 10px;
+    ;
+    text-align: left;
+    border: 1px solid whitesmoke;
+    height: 50px;
+}
+
+table tbody tr {
+    width: 100%;
+    max-height: 50px;
+}
+
+.checkbox input[type="checkbox"] {
+    visibility: hidden;
+    display: none;
+}
+
+.checkbox .toggle {
+    position: relative;
+    display: block;
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform: translate3d(0, 0, 0);
+}
+
+.toggle {
+    margin-bottom: 0px !important;
+}
+
+.td-action {
+    display: flex;
+    column-gap: 10px;
+    justify-content: center;
+}
+
+.checkbox .toggle:before {
+    content: "";
+    position: relative;
+    top: 3px;
+    left: 3px;
+    width: 34px;
+    height: 14px;
+    display: block;
+    background: #9a9999;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.spaceForBtn
+{
+    padding: 13px !important;
+}
+
+.checkbox .toggle span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    display: block;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(154, 153, 153, 0.5);
+    transition: all 0.2s ease;
+}
+
+.checkbox .toggle span:before {
+    content: "";
+    position: absolute;
+    display: block;
+    margin: -18px;
+    width: 56px;
+    height: 56px;
+    background: rgba(79, 46, 220, 0.5);
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 1;
+    pointer-events: none;
+}
+
+.checkbox .cbx:checked+.toggle:before {
+    background: #a6e6f7;
+}
+
+.checkbox .cbx:checked+.toggle span {
+    background: #326789;
+    transform: translateX(20px);
+    transition: all 0.2s cubic-bezier(0.8, 0.4, 0.3, 1.25), background 0.15s ease;
+    box-shadow: 0 3px 8px rgba(79, 46, 220, 0.2);
+}
+
+.checkbox .cbx:checked+.toggle span:before {
+    transform: scale(1);
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.page_height {
+    background-color: white;
+    height: calc(100vh - 182px);
+    border-radius: 6px;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .page_height {
+        background-color: white;
+        height: calc(100vh - 140px);
+        border-radius: 6px;
+    }
+}
+
+
+.user_user .user_group {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #185c87;
+    border: 2px solid #326789;
+    /* Set your desired border color here */
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+    /* Optional: Adjust border radius as needed */
+}
+
+.user_user .user_group.active {
+    font-size: 1.2rem;
+    font-weight: 500;
+    background-color: #326789;
+    /* Set your desired background color here */
+    color: white;
+    border: none;
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+    /* Set your desired text color here */
+}
+
+.user_user .user_management {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #185c87;
+    border: 2px solid #326789;
+    /* Set your desired border color here */
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
+    /* Optional: Adjust border radius as needed */
+}
+
+.user_user .user_management.active {
+    font-size: 1.2rem;
+    font-weight: 500;
+    background-color: #326789;
+    /* Set your desired background color here */
+    color: white;
+    border: none;
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
+    /* Set your desired text color here */
+}
+
+.label_user {
+    font-size: 1.2rem !important;
+    color: #185c87 !important;
+    font-weight: 500 !important;
+}
+
+.table-container {
+    max-width: 100%;
+    overflow-x: auto;
+    max-height: calc(70vh - 140px);
+    min-height: calc(70vh - 140px);
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.no-records-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+
+table {
+    width: 100%;
+}
+
+th,
+td {
+    white-space: nowrap;
+}
+
+th,
+td {
+    /* Adjust padding as needed */
+    border: 1px solid #ccc;
+    /* Add border to cells */
+}
+
+.no-wrap {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fixed-header th {
+    background: #326789;
+    /* Header background color */
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.fixed-header th,
+.fixed-header td {
+    padding: 10px;
+    /* Adjust padding as needed */
+}
+
+.col-sno {
+    min-width: 50px;
+    /* S.No column width */
+}
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.fixed-header
+{
+    z-index: 1 !important;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background-color: #326789;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+.part_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.total_records {
+    font-size: 1.2rem;
+    color: #018DB0;
+}
+
+.no_records {
+    font-size: 1.2rem;
+    color: #326789;
+}
+
+.form_title {
+    font-size: 1.4rem;
+    color: #018DB0;
+    font-weight: 500;
+}
+.modal_table {
+    height: 60vh !important;
+    overflow-y: auto;
+}
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.pass_div{
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pass_div input {
+    padding-right: 30px; /* Adjust this value to make space for the icon */
+}
+
+.pass_div .fa {
+    position: absolute;
+    top: 50%;
+    right: 8px; /* Adjust the value to position the icon properly */
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+
+select.form-control {
+    font-size: 16px; /* Adjust the font size as needed */
+  }
+ 
+
+ ::ng-deep.form-control:focus{
+
+    box-shadow: none ; 
+    box-shadow: 2px 2px 3px #326789 !important;
+    border: 2px solid #326789 !important;
+
+  }
+
+
+  
