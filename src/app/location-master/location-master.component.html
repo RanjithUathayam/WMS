@@ -12,24 +12,40 @@
       </div>
     </div>
 
+    <div class="row mx-1 mb-2" *ngIf="warehousesLoaded && warehouseListCache?.length === 0">
+      <div class="col-12">
+        <div class="no-warehouse-banner">
+          <i class="fa fa-exclamation-triangle mr-2" aria-hidden="true"></i>
+          No warehouses are configured yet. Warehouse and Row master data can only be added directly on the backend (this screen only manages Locations/Positions) &mdash; ask your administrator to add at least one Warehouse and Row before locations can be created here.
+        </div>
+      </div>
+    </div>
+
     <!-- ============ VIEW 1: LOCATION LIST ============ -->
     <div class="row page_height mx-1 my-2 py-2 gk-page" *ngIf="activeView === 'list'">
       <div class="col-12 gk-h100p">
 
-        <div class="row mb-2">
-          <div class="col-md-6 py-1">
+        <div class="row mb-2 align-items-end">
+          <div class="col-md-4 py-1">
             <label>Warehouse <span class="text-danger">*</span></label>
             <select class="form-control" [(ngModel)]="filters['WarehouseCode']" (change)="onFilterWarehouseChange()">
               <option value="">Select Warehouse</option>
               <option *ngFor="let wh of warehouseListCache" [value]="wh.warehouseCode">{{ wh.warehouseName }} ({{ wh.warehouseCode }})</option>
             </select>
           </div>
-          <div class="col-md-6 py-1">
+          <div class="col-md-4 py-1">
             <label>Row <span class="text-danger">*</span></label>
             <select class="form-control" [(ngModel)]="filters['RowCode']" (change)="applyFilters()" [disabled]="!filters['WarehouseCode']">
               <option value="">Select Row</option>
               <option *ngFor="let row of filterRowOptions" [value]="row.rowCode">{{ row.rowCode }}</option>
             </select>
+            <small class="text-danger" *ngIf="filterRowsError">{{ filterRowsError }}</small>
+            <small class="text-muted" *ngIf="filters['WarehouseCode'] && !filterRowsError && filterRowOptions?.length === 0">No rows configured for this warehouse yet.</small>
+          </div>
+          <div class="col-md-4 py-1 d-flex justify-content-end add-location-col">
+            <button *ngIf="btnRights?.master_location_creates" class="button" (click)="openCreateModal()">
+              <span class="button-content"><i class="fa fa-plus-square mr-1" aria-hidden="true"></i>Add Location</span>
+            </button>
           </div>
         </div>
 
@@ -50,17 +66,17 @@
               <tr *ngFor="let item of pagedLocationList; let i = index">
                 <td class="col-sno">{{ (p - 1) * itemsPerPage + i + 1 }}</td>
                 <td>{{ item.locationCode }}</td>
-                <td>{{ item.warehouseName }}</td>
+                <td>{{ item.warehouseCode }}</td>
                 <td>{{ item.rowCode }}</td>
                 <td>{{ item.positionNo }}</td>
                 <td>
-                  <span class="status-badge" [ngClass]="'status-' + (item.status | lowercase)">{{ item.status }}</span>
+                  <span class="status-badge" [ngClass]="'status-' + (item.status | lowercase)">{{ item.status | titlecase }}</span>
                 </td>
                 <td *ngIf="btnRights?.master_location_modifies">
-                  <span *ngIf="item.status !== 'Occupied'; else occupiedTpl" class="status-badge pointer"
-                    [ngClass]="item.status == 'Active' ? 'status-available' : 'status-inactive'"
+                  <span *ngIf="item.status !== 'OCCUPIED'; else occupiedTpl" class="status-badge pointer"
+                    [ngClass]="item.status == 'AVAILABLE' ? 'status-available' : 'status-inactive'"
                     (click)="changeLocationStatus(item)">
-                    {{ item.status == 'Active' ? 'Deactivate' : 'Activate' }}
+                    {{ item.status == 'AVAILABLE' ? 'Deactivate' : 'Activate' }}
                   </span>
                   <ng-template #occupiedTpl><span class="text-muted">System-set</span></ng-template>
                 </td>
@@ -98,50 +114,33 @@
       <div class="col-12 gk-h100p">
         <div class="row structure-row">
 
-          <!-- Warehouses panel -->
+          <!-- Warehouses panel (read-only: no create/update/status endpoint exists for this on the backend) -->
           <div class="col-md-4 structure-panel">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5>Warehouses</h5>
-              <button *ngIf="btnRights?.master_location_creates" class="button" (click)="openWarehouseSidebar(null)">
-                <span class="button-content"><i class="fa fa-plus-square mr-1" aria-hidden="true"></i>Add</span>
-              </button>
             </div>
             <ul class="structure-list">
               <li *ngFor="let wh of warehouseListCache" [class.active]="selectedWarehouse?.warehouseCode === wh.warehouseCode" (click)="selectWarehouse(wh)">
                 <span>{{ wh.warehouseName }} ({{ wh.warehouseCode }})</span>
-                <span class="structure-actions">
-                  <i *ngIf="btnRights?.master_location_modifies" class="fa fa-edit pointer" (click)="$event.stopPropagation(); openWarehouseSidebar(wh)"></i>
-                  <span class="status-badge pointer" [ngClass]="wh.Status == 1 ? 'status-available' : 'status-inactive'"
-                    (click)="$event.stopPropagation(); btnRights?.master_location_modifies && changeWarehouseStatus(wh)">
-                    {{ wh.Status == 1 ? 'Active' : 'Inactive' }}
-                  </span>
-                </span>
               </li>
               <li *ngIf="warehouseListCache?.length == 0" class="text-muted no-click">No Warehouses</li>
             </ul>
           </div>
 
-          <!-- Rows panel -->
+          <!-- Rows panel (read-only: no create/update/status endpoint exists for this on the backend) -->
           <div class="col-md-4 structure-panel">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5>Rows <span *ngIf="selectedWarehouse">- {{ selectedWarehouse.warehouseCode }}</span></h5>
-              <button *ngIf="btnRights?.master_location_creates && selectedWarehouse" class="button" (click)="openRowSidebar(null)">
-                <span class="button-content"><i class="fa fa-plus-square mr-1" aria-hidden="true"></i>Add</span>
-              </button>
             </div>
             <div *ngIf="!selectedWarehouse" class="text-muted">Select a warehouse</div>
+            <div class="row-load-error" *ngIf="selectedWarehouse && rowsError">
+              <i class="fa fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ rowsError }}
+            </div>
             <ul class="structure-list" *ngIf="selectedWarehouse">
               <li *ngFor="let row of rowList" [class.active]="selectedRow?.rowCode === row.rowCode" (click)="selectRow(row)">
                 <span>Row {{ row.rowCode }}</span>
-                <span class="structure-actions">
-                  <i *ngIf="btnRights?.master_location_modifies" class="fa fa-edit pointer" (click)="$event.stopPropagation(); openRowSidebar(row)"></i>
-                  <span class="status-badge pointer" [ngClass]="row.Status == 1 ? 'status-available' : 'status-inactive'"
-                    (click)="$event.stopPropagation(); btnRights?.master_location_modifies && changeRowStatus(row)">
-                    {{ row.Status == 1 ? 'Active' : 'Inactive' }}
-                  </span>
-                </span>
               </li>
-              <li *ngIf="rowList?.length == 0" class="text-muted no-click">No Rows</li>
+              <li *ngIf="!rowsError && rowList?.length == 0" class="text-muted no-click">No rows configured for this warehouse yet</li>
             </ul>
           </div>
 
@@ -149,7 +148,7 @@
           <div class="col-md-4 structure-panel">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5>Positions <span *ngIf="selectedRow">- Row {{ selectedRow.rowCode }}</span></h5>
-              <button *ngIf="btnRights?.master_location_creates && selectedRow" class="button" (click)="openPositionSidebar()">
+              <button *ngIf="btnRights?.master_location_creates && selectedRow" class="button" (click)="openCreateModal()">
                 <span class="button-content"><i class="fa fa-plus-square mr-1" aria-hidden="true"></i>Add</span>
               </button>
             </div>
@@ -158,7 +157,13 @@
               <li *ngFor="let pos of positionList" class="no-click">
                 <span>{{ pos.locationCode }} (Pos {{ pos.positionNo }})</span>
                 <span class="structure-actions">
-                  <span class="status-badge" [ngClass]="'status-' + (pos.status | lowercase)">{{ pos.status }}</span>
+                  <i *ngIf="btnRights?.master_location_modifies && pos.status === 'AVAILABLE'" class="fa fa-edit pointer" (click)="openEditModal(pos)"></i>
+                  <span class="status-badge" [ngClass]="'status-' + (pos.status | lowercase)">{{ pos.status | titlecase }}</span>
+                  <span *ngIf="btnRights?.master_location_modifies && pos.status !== 'OCCUPIED'" class="status-badge pointer"
+                    [ngClass]="pos.status == 'AVAILABLE' ? 'status-available' : 'status-inactive'"
+                    (click)="changeLocationStatus(pos)">
+                    {{ pos.status == 'AVAILABLE' ? 'Deactivate' : 'Activate' }}
+                  </span>
                 </span>
               </li>
               <li *ngIf="positionList?.length == 0" class="text-muted no-click">No Positions</li>
@@ -172,121 +177,118 @@
   </div>
 </section>
 
-<!-- ============ SIDEBAR (Warehouse / Row / Position forms) ============ -->
-<section class="sidebar close" id="locationMasterSidebar">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12">
+<!-- ============ POPUP MODAL (Position add / edit forms) ============ -->
+<div class="location-modal-backdrop" *ngIf="modalMode" (click)="closeModal()"></div>
+<div class="location-modal" *ngIf="modalMode" role="dialog" aria-modal="true">
+  <div class="location-modal-dialog">
 
-        <div *ngIf="sidebarMode === 'warehouse'">
-          <div class="justify-content-between align-items-center d-flex py-2">
-            <p class="sidebar-head">{{ editId == '' ? 'Add New Warehouse' : 'Edit Warehouse' }}</p>
-            <button class="button close-icon" (click)="closeSidebar()">
-              <span class="button-content" aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <form [formGroup]="warehouseForm">
-            <div class="form-group">
-              <div class="py-2">
-                <label>Warehouse Code <span class="text-danger">*</span> :</label>
-                <input type="text" formControlName="WarehouseCode" [ngClass]="{ 'is-invalid': submitted && wf['WarehouseCode'].errors }">
-                <div *ngIf="submitted && wf['WarehouseCode'].errors" class="invalid-feedback">
-                  <div *ngIf="wf['WarehouseCode'].errors['required']">Warehouse Code is required</div>
-                </div>
-              </div>
-              <div class="py-2">
-                <label>Warehouse Name <span class="text-danger">*</span> :</label>
-                <input type="text" formControlName="WarehouseName" [ngClass]="{ 'is-invalid': submitted && wf['WarehouseName'].errors }">
-                <div *ngIf="submitted && wf['WarehouseName'].errors" class="invalid-feedback">
-                  <div *ngIf="wf['WarehouseName'].errors['required']">Warehouse Name is required</div>
-                </div>
-              </div>
-              <div class="d-flex justify-content-end align-items-center pt-4">
-                <button class="button mr-2" type="button" (click)="submitWarehouse()">
-                  <span class="button-content">Submit</span>
-                </button>
-                <button class="button" type="button" (click)="warehouseForm.reset()">
-                  <span class="button-content">Clear</span>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        <div *ngIf="sidebarMode === 'row'">
-          <div class="justify-content-between align-items-center d-flex py-2">
-            <p class="sidebar-head">{{ editId == '' ? 'Add New Row' : 'Edit Row' }}</p>
-            <button class="button close-icon" (click)="closeSidebar()">
-              <span class="button-content" aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <form [formGroup]="rowForm">
-            <div class="form-group">
-              <div class="py-2">
-                <label>Warehouse :</label>
-                <input type="text" [value]="selectedWarehouse?.warehouseName" disabled>
-              </div>
-              <div class="py-2">
-                <label>Row Code <span class="text-danger">*</span> :</label>
-                <input type="text" formControlName="RowCode" [ngClass]="{ 'is-invalid': submitted && rf['RowCode'].errors }">
-                <div *ngIf="submitted && rf['RowCode'].errors" class="invalid-feedback">
-                  <div *ngIf="rf['RowCode'].errors['required']">Row Code is required</div>
-                </div>
-              </div>
-              <div class="d-flex justify-content-end align-items-center pt-4">
-                <button class="button mr-2" type="button" (click)="submitRow()">
-                  <span class="button-content">Submit</span>
-                </button>
-                <button class="button" type="button" (click)="rowForm.reset()">
-                  <span class="button-content">Clear</span>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        <div *ngIf="sidebarMode === 'position'">
-          <div class="justify-content-between align-items-center d-flex py-2">
-            <p class="sidebar-head">Add Pallet Position</p>
-            <button class="button close-icon" (click)="closeSidebar()">
-              <span class="button-content" aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <form [formGroup]="positionForm">
-            <div class="form-group">
-              <div class="py-2">
-                <label>Warehouse / Row :</label>
-                <input type="text" [value]="(selectedWarehouse?.warehouseCode || '') + ' / Row ' + (selectedRow?.rowCode || '')" disabled>
-              </div>
-              <div class="py-2">
-                <label>Position From <span class="text-danger">*</span> :</label>
-                <input type="number" formControlName="PositionFrom" [ngClass]="{ 'is-invalid': submitted && pf['PositionFrom'].errors }">
-                <div *ngIf="submitted && pf['PositionFrom'].errors" class="invalid-feedback">
-                  <div *ngIf="pf['PositionFrom'].errors['required']">Position number is required</div>
-                  <div *ngIf="pf['PositionFrom'].errors['min']">Position number must be at least 1</div>
-                </div>
-              </div>
-              <div class="py-2">
-                <label>Position To (optional, for bulk add) :</label>
-                <input type="number" formControlName="PositionTo">
-              </div>
-              <div class="py-2" *ngIf="positionCodePreview">
-                <label>Location Code Preview :</label>
-                <input type="text" [value]="positionCodePreview" disabled>
-              </div>
-              <div class="d-flex justify-content-end align-items-center pt-4">
-                <button class="button mr-2" type="button" (click)="submitPosition()">
-                  <span class="button-content">Submit</span>
-                </button>
-                <button class="button" type="button" (click)="positionForm.reset()">
-                  <span class="button-content">Clear</span>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-
+    <div *ngIf="modalMode === 'create'">
+      <div class="justify-content-between align-items-center d-flex py-2 location-modal-header">
+        <p class="sidebar-head mb-0">Add Pallet Position</p>
+        <button class="button close-icon" (click)="closeModal()">
+          <span class="button-content" aria-hidden="true">&times;</span>
+        </button>
       </div>
+      <form [formGroup]="positionForm">
+        <div class="form-group">
+          <div class="py-2">
+            <label>Warehouse <span class="text-danger">*</span> :</label>
+            <select class="form-control" [(ngModel)]="createWarehouseCode" [ngModelOptions]="{ standalone: true }" (change)="onCreateWarehouseChange()" [ngClass]="{ 'is-invalid': submitted && !createWarehouseCode }">
+              <option value="">Select Warehouse</option>
+              <option *ngFor="let wh of warehouseListCache" [value]="wh.warehouseCode">{{ wh.warehouseName }} ({{ wh.warehouseCode }})</option>
+            </select>
+            <div *ngIf="submitted && !createWarehouseCode" class="invalid-feedback">Warehouse is required</div>
+          </div>
+          <div class="py-2">
+            <label>Row <span class="text-danger">*</span> :</label>
+            <input type="text" [(ngModel)]="createRowCode" [ngModelOptions]="{ standalone: true }" list="createRowSuggestions"
+              [disabled]="!createWarehouseCode" placeholder="Type an existing row, or a new row code"
+              [ngClass]="{ 'is-invalid': submitted && !createRowCode }">
+            <datalist id="createRowSuggestions">
+              <option *ngFor="let row of createRowOptions" [value]="row.rowCode"></option>
+            </datalist>
+            <div *ngIf="submitted && !createRowCode" class="invalid-feedback">Row is required</div>
+            <small class="text-danger" *ngIf="createRowsError">{{ createRowsError }}</small>
+            <small class="text-muted" *ngIf="createWarehouseCode && !createRowsError && createRowOptions?.length === 0">No existing rows for this warehouse yet &mdash; type a new row code above to create the first one.</small>
+            <small class="text-muted" *ngIf="createWarehouseCode && createRowOptions?.length > 0">Start typing to see existing rows, or enter a new one.</small>
+          </div>
+          <div class="py-2">
+            <label>Position From <span class="text-danger">*</span> :</label>
+            <input type="number" formControlName="PositionFrom" [ngClass]="{ 'is-invalid': submitted && pf['PositionFrom'].errors }">
+            <div *ngIf="submitted && pf['PositionFrom'].errors" class="invalid-feedback">
+              <div *ngIf="pf['PositionFrom'].errors['required']">Position number is required</div>
+              <div *ngIf="pf['PositionFrom'].errors['min']">Position number must be at least 1</div>
+            </div>
+          </div>
+          <div class="py-2">
+            <label>Position To (optional, for bulk add) :</label>
+            <input type="number" formControlName="PositionTo">
+          </div>
+          <div class="py-2" *ngIf="positionCodePreview">
+            <label>Location Code Preview :</label>
+            <input type="text" [value]="positionCodePreview" disabled>
+          </div>
+          <div class="d-flex justify-content-end align-items-center pt-4">
+            <button class="button mr-2" type="button" (click)="submitPosition()">
+              <span class="button-content">Submit</span>
+            </button>
+            <button class="button" type="button" (click)="closeModal()">
+              <span class="button-content">Cancel</span>
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
+
+    <div *ngIf="modalMode === 'edit'">
+      <div class="justify-content-between align-items-center d-flex py-2 location-modal-header">
+        <p class="sidebar-head mb-0">Edit Position</p>
+        <button class="button close-icon" (click)="closeModal()">
+          <span class="button-content" aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form [formGroup]="editPositionForm">
+        <div class="form-group">
+          <div class="py-2">
+            <label>Current Location Code :</label>
+            <input type="text" [value]="editingLocation?.locationCode" disabled>
+          </div>
+          <div class="py-2">
+            <label>Row <span class="text-danger">*</span> :</label>
+            <select class="form-control" formControlName="RowCode" [ngClass]="{ 'is-invalid': submitted && epf['RowCode'].errors }">
+              <option value="">Select Row</option>
+              <option *ngFor="let row of rowList" [value]="row.rowCode">{{ row.rowCode }}</option>
+            </select>
+            <div *ngIf="submitted && epf['RowCode'].errors" class="invalid-feedback">
+              <div *ngIf="epf['RowCode'].errors['required']">Row is required</div>
+            </div>
+          </div>
+          <div class="py-2">
+            <label>Position No <span class="text-danger">*</span> :</label>
+            <input type="number" formControlName="PositionNo" [ngClass]="{ 'is-invalid': submitted && epf['PositionNo'].errors }">
+            <div *ngIf="submitted && epf['PositionNo'].errors" class="invalid-feedback">
+              <div *ngIf="epf['PositionNo'].errors['required']">Position number is required</div>
+              <div *ngIf="epf['PositionNo'].errors['min']">Position number must be at least 1</div>
+            </div>
+          </div>
+          <div class="py-2" *ngIf="editPositionCodePreview">
+            <label>New Location Code Preview :</label>
+            <input type="text" [value]="editPositionCodePreview" disabled>
+          </div>
+          <div class="py-2">
+            <small class="text-muted">Editable only while this position is Available and has no prior storage history.</small>
+          </div>
+          <div class="d-flex justify-content-end align-items-center pt-4">
+            <button class="button mr-2" type="button" (click)="submitEditPosition()">
+              <span class="button-content">Submit</span>
+            </button>
+            <button class="button" type="button" (click)="closeModal()">
+              <span class="button-content">Cancel</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
   </div>
-</section>
+</div>

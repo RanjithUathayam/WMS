@@ -222,44 +222,42 @@ export class ApiService {
     return this.http.put(this.baseURL + url, data, { 'headers': this.option });
   }
 
-  // Location Master (Warehouse / Row / Location)
+  // Location Master (Warehouse / Row / Location) — mounted at /api/location.
+  // Warehouse and Row are read-only here: the backend only exposes GET routes
+  // for them (no create/update/status-toggle endpoints), so there are no
+  // corresponding write methods below.
   getWarehouseList() {
     return this.http.get(this.baseURL + 'location/warehouses', { 'headers': this.option });
   }
-  createWarehouse(data: any) {
-    return this.http.post(this.baseURL + 'location/warehouses', data, { 'headers': this.option });
-  }
-  updateWarehouse(data: any) {
-    return this.http.put(this.baseURL + 'location/warehouses' + '/' + data.warehouseCode, data, { 'headers': this.option });
-  }
-  updateWarehouseStatus(data: any, warehouseCode: any) {
-    return this.http.put(this.baseURL + 'location/warehouses/' + warehouseCode + '/status', data, { 'headers': this.option });
+
+  getRowList(warehouseCode: any, includeInactive: boolean = true) {
+    return this.http.get(this.baseURL + 'location/warehouse/' + warehouseCode + '/rows?includeInactive=' + includeInactive, { 'headers': this.option });
   }
 
-  getRowList(warehouseCode: any) {
-    return this.http.get(this.baseURL + 'location/warehouse/' + warehouseCode + '/rows', { 'headers': this.option });
-  }
-  createRow(data: any) {
-    return this.http.post(this.baseURL + 'master/MasterRow', data, { 'headers': this.option });
-  }
-  updateRow(data: any) {
-    return this.http.put(this.baseURL + 'master/MasterRow' + '/' + data.id, data, { 'headers': this.option });
-  }
-  updateRowStatus(data: any, id: any) {
-    return this.http.put(this.baseURL + 'master/MasterRow/' + id + '/status', data, { 'headers': this.option });
+  getWarehouseStatus(warehouseCode: any) {
+    return this.http.get(this.baseURL + 'location/warehouses/' + warehouseCode + '/status', { 'headers': this.option });
   }
 
   getLocationList(warehouseCode: any, rowCode: any) {
     return this.http.get(this.baseURL + 'location/warehouse/' + warehouseCode + '/row/' + rowCode + '/positions', { 'headers': this.option });
   }
+  getLocationDetail(locationId: any) {
+    return this.http.get(this.baseURL + 'location/details/' + locationId, { 'headers': this.option });
+  }
   createLocation(data: any) {
-    return this.http.post(this.baseURL + 'location/', data, { 'headers': this.option });
+    return this.http.post(this.baseURL + 'location/create', data, { 'headers': this.option });
   }
-  activateLocation(id: any) {
-    return this.http.patch(this.baseURL + 'location/' + id + '/activate', {}, { 'headers': this.option });
+  generateLocationPositions(data: any) {
+    return this.http.post(this.baseURL + 'location/positions/generate', data, { 'headers': this.option });
   }
-  deactivateLocation(id: any) {
-    return this.http.patch(this.baseURL + 'location/' + id + '/deactivate', {}, { 'headers': this.option });
+  updateLocationDetails(locationId: any, data: any) {
+    return this.http.put(this.baseURL + 'location/details/' + locationId, data, { 'headers': this.option });
+  }
+  activateLocation(locationId: any) {
+    return this.http.patch(this.baseURL + 'location/activate/' + locationId, {}, { 'headers': this.option });
+  }
+  deactivateLocation(locationId: any) {
+    return this.http.patch(this.baseURL + 'location/deactivate/' + locationId, {}, { 'headers': this.option });
   }
 
   getDashboardData() {
