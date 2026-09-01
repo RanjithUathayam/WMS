@@ -2,17 +2,15 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center px-4 py-1">
-          <p class="d-flex m-0 filter_icon" (click)="openSidebar()">
-            <span>Filter</span>
-            <i class="fa fa-filter d-flex justify-content-center align-items-center mt-1 ml-3" aria-hidden="true"></i>
-          </p>
-          <div class="btn-group-fab">
-            <button class="button" type="button" (click)="export('csv')">CSV</button>
-            <button class="button ml-2" type="button" (click)="export('excel')">Excel</button>
-            <button class="button ml-2" type="button" (click)="export('pdf')">PDF</button>
-          </div>
+        <div class="d-flex justify-content-end align-items-center px-4 pt-2 btn-group-fab">
+          <button class="button" type="button" (click)="export('csv')">CSV</button>
+          <button class="button ml-2" type="button" (click)="export('excel')">Excel</button>
+          <button class="button ml-2" type="button" (click)="export('pdf')">PDF</button>
         </div>
+        <p class="d-flex m-0 px-4 py-1 filter_icon" (click)="openSidebar()">
+          <span>Filter</span>
+          <i class="fa fa-filter d-flex justify-content-center align-items-center mt-1 ml-3" aria-hidden="true"></i>
+        </p>
         <div>
           <app-report-table [columns]="columns" [rows]="rows" [loading]="loading" [page]="page" [pageSize]="pageSize"
             [totalRecords]="totalRecords" [totalPages]="totalPages" [sortBy]="sortBy" [sortDir]="sortDir"

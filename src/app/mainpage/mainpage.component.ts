@@ -149,6 +149,21 @@ export class MainpageComponent implements OnInit {
  
       this.menuRights = menus;
     }
+
+    // Backend rights for the 4 new report screens aren't seeded into any UserGroup's rights JSON
+    // yet (sql/RightsMenuList_Reports_Data.sql only adds them to the assignable catalog) — so, same
+    // as location-master.component.ts's Admin bypass, grant the Admin login full access here on the
+    // frontend until report_preBinning_list / report_palletMapping_list / report_locationMapping_list /
+    // report_inventory_list are actually granted through the Rights UI.
+    const loggedInUser = (localStorage.getItem('UserName') || '').toLowerCase();
+    if (loggedInUser === 'admin') {
+      this.menuRights = this.menuRights || {};
+      this.menuRights.report_module = true;
+      this.menuRights.report_preBinning_list = true;
+      this.menuRights.report_palletMapping_list = true;
+      this.menuRights.report_locationMapping_list = true;
+      this.menuRights.report_inventory_list = true;
+    }
  
     this.tagEmergency = router.url.split('/')[2];
     

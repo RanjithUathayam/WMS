@@ -1,7 +1,3 @@
-.filter_icon {
-  cursor: pointer;
-}
-
 .btn-group-fab .button {
   padding: 6px 1.2rem;
   border-radius: 20px;
@@ -22,4 +18,46 @@
   color: #018DB0;
   font-weight: 500;
   margin-bottom: 0.8rem;
+}
+
+/* Slide-in filter panel — same rules as prebinning-summary.component.css (Angular's per-component
+   CSS scoping means these have to be repeated here, they don't apply from that other component). */
+.filter_icon {
+  position: absolute;
+  top: -4.2vh;
+  display: flex;
+  left: 87%;
+  text-align: center;
+  padding: 2vh 2vw !important;
+  height: 4vh !important;
+  align-items: center;
+  cursor: pointer;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0px;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 25%;
+  background: #e6e6e6;
+  z-index: 100;
+  transition: all 0.5s ease;
+  border-left: 2px solid #018DB0;
+  border-bottom: 2px solid #018DB0;
+}
+
+.sidebar.close {
+  width: 0px;
+}
+
+.closesidebar {
+  padding: 0px !important;
+  width: 40px;
+  height: 40px;
+}
+
+.closesidebar span {
+  font-size: 2rem;
 }
