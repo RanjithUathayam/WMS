@@ -6,6 +6,12 @@ import { AppComponent } from '../app.component';
 import { ApiService } from '../service/api.service';
 import { SwalService } from '../service/swal.service';
 
+// Loaded globally via a <script> tag in index.html (https://qz.io) — lets this page see/print to
+// printers physically attached to the machine the browser is running on. There is no npm/ES-module
+// build wired into this project; qz is a plain global, like the jquery/bootstrap script tags already
+// in index.html.
+declare var qz: any;
+
 type BatchStatus = 'Idle' | 'Reserving' | 'Reserved' | 'Printing' | 'Printed' | 'Failed';
 
 interface ReservedLabel {
@@ -190,38 +196,68 @@ export class LabelPrintComponent implements OnInit {
     );
   }
 
-/** Loads the printer dropdown from the last detection result (fast — served from a short-lived
-   *  cache on the backend). Used silently on page open; never surfaces an error toast. */
+/** Loads the printer dropdown via QZ Tray (https://qz.io), the small desktop app the user installs
+   *  locally so the browser can see printers physically attached to their own PC — the backend can
+   *  never answer this correctly, since it would only ever know about its own printers, not the
+   *  browser's. Used silently on page open; never surfaces an error toast. */
   loadPrinters() {
     this.isDetectingPrinters = true;
     this.printerDetectionError = '';
-
-    this.apiservice.getLabelPrinters().subscribe(
-      (res: any) => this.applyPrinterList(res, false),
-      (error: any) => {
-        this.isDetectingPrinters = false;
-        this.availablePrinters = [];
-        this.printerDetectionError = this.getErrorMessage(error, 'Unable to load printers.');
-        console.error('GET label/printers failed:', error);
-      }
-    );
+    this.queryQzPrinters(false);
   }
 
-  /** "Detect" button — forces a fresh OS-level printer query instead of serving the cache. */
+  /** "Detect" button — same QZ Tray query, but surfaces failures as a toast since the user explicitly
+   *  asked for a fresh list. */
   detectPrinters() {
     this.isDetectingPrinters = true;
     this.printerDetectionError = '';
+    this.queryQzPrinters(true);
+  }
 
-    this.apiservice.detectLabelPrinters().subscribe(
-      (res: any) => this.applyPrinterList(res, true),
-      (error: any) => {
+  private queryQzPrinters(isUserInitiated: boolean) {
+    this.ensureQzConnected()
+      .then(() => Promise.all([qz.printers.find(), qz.printers.getDefault().catch(() => null)]))
+      .then(([found, defaultName]: [any, any]) => {
+        const names: string[] = (Array.isArray(found) ? found : [found]).filter((n: any) => !!n);
+        const printers: PrinterOption[] = names.map((name: string) => ({
+          name,
+          status: 'available',
+          isDefault: name === defaultName
+        }));
+        this.applyPrinterList({ success: true, printers }, isUserInitiated);
+      })
+      .catch((error: any) => {
         this.isDetectingPrinters = false;
         this.availablePrinters = [];
-        this.printerDetectionError = this.getErrorMessage(error, 'Unable to detect printers. Please try again.');
-        console.error('POST label/printers/detect failed:', error);
-        this.swal.error('Error', this.printerDetectionError);
-      }
-    );
+        this.printerDetectionError = this.getQzErrorMessage(
+          error,
+          'Unable to detect printers. Make sure QZ Tray is installed and running on this computer.'
+        );
+        console.error('QZ Tray printer detection failed:', error);
+        if (isUserInitiated) {
+          this.swal.error('Error', this.printerDetectionError);
+        }
+      });
+  }
+
+  /** Connects to the QZ Tray app running on this machine if not already connected. QZ Tray shows its
+   *  own one-time "unsigned connection" prompt to the user on first connect per session — expected,
+   *  since this app doesn't sign requests with a QZ certificate. */
+  private ensureQzConnected(): Promise<void> {
+    if (typeof qz === 'undefined') {
+      return Promise.reject(new Error('QZ Tray did not load in this browser. Check your connection and reload the page.'));
+    }
+    if (qz.websocket.isActive()) {
+      return Promise.resolve();
+    }
+    return qz.websocket.connect();
+  }
+
+  private getQzErrorMessage(error: any, fallback: string): string {
+    if (!error) return fallback;
+    if (typeof error === 'string') return error;
+    if (error.message) return error.message;
+    return fallback;
   }
 
   private applyPrinterList(res: any, isUserInitiated: boolean) {
@@ -490,8 +526,9 @@ export class LabelPrintComponent implements OnInit {
     this.batchStatus = 'Printing';
     this.batchError = '';
 
+    const labelNumbers = this.reservedLabels.map((l) => l.labelNumber);
     const payload = {
-      labelNumbers: this.reservedLabels.map((l) => l.labelNumber),
+      labelNumbers,
       copies: this.copies,
       printerName: this.selectedPrinter,
       mfgDate: this.mfgDate,
@@ -504,23 +541,21 @@ export class LabelPrintComponent implements OnInit {
     };
 
     this.appComponent.showLoading('Printing labels...');
+    // The backend only validates/reserves and builds the raw TSPL command here — it never talks to a
+    // printer itself (see labelReservationService.printLabelsAsync). sendToQzTrayThenConfirm() is what
+    // actually gets it to the printer physically attached to this machine, then reports the real
+    // outcome back so the reservation's status reflects reality.
     this.apiservice.printLabels(payload).subscribe(
       (res: any) => {
-        this.appComponent.hideLoading();
-        if (res?.success) {
-          this.batchStatus = 'Printed';
-          this.swal.success_timer('Print job completed successfully');
-          // These exact Label Numbers are now Printed and can never be printed again (the backend
-          // rejects a reprint), so re-enabling this same Print button would only ever fail. Reset
-          // the batch shortly after so the screen is immediately ready for the next Label Count.
-          setTimeout(() => this.startNewBatch(), 1200);
+        if (!res?.success) {
+          this.appComponent.hideLoading();
+          this.batchStatus = 'Failed';
+          this.batchError = this.getErrorMessage(res, 'Printing failed.');
+          console.error('POST label/print returned failure:', res);
+          this.swal.error('Print Error', this.batchError);
           return;
         }
-
-        this.batchStatus = 'Failed';
-        this.batchError = this.getErrorMessage(res, 'Printing failed.');
-        console.error('POST label/print returned failure:', res);
-        this.swal.error('Print Error', this.batchError);
+        this.sendToQzTrayThenConfirm(labelNumbers, res.data.printerName, res.data.command);
       },
       (error: any) => {
         this.appComponent.hideLoading();
@@ -536,6 +571,37 @@ export class LabelPrintComponent implements OnInit {
         this.swal.error('Print Error', this.batchError);
       }
     );
+  }
+
+  private sendToQzTrayThenConfirm(labelNumbers: string[], printerName: string, command: string) {
+    this.ensureQzConnected()
+      .then(() => {
+        const config = qz.configs.create(printerName, { encoding: 'UTF-8' });
+        return qz.print(config, [{ type: 'raw', format: 'plain', data: command }]);
+      })
+      .then(() => {
+        this.appComponent.hideLoading();
+        this.batchStatus = 'Printed';
+        this.swal.success_timer('Print job completed successfully');
+        this.apiservice.confirmPrintLabels({ labelNumbers, success: true }).subscribe({
+          error: (e) => console.error('POST label/print/confirm failed:', e)
+        });
+        // These exact Label Numbers are now Printed and can never be printed again (the backend
+        // rejects a reprint), so re-enabling this same Print button would only ever fail. Reset
+        // the batch shortly after so the screen is immediately ready for the next Label Count.
+        setTimeout(() => this.startNewBatch(), 1200);
+      })
+      .catch((qzError: any) => {
+        this.appComponent.hideLoading();
+        const message = this.getQzErrorMessage(qzError, 'Sending the print job to the printer failed.');
+        this.batchStatus = 'Failed';
+        this.batchError = message;
+        console.error('QZ Tray print failed:', qzError);
+        this.apiservice.confirmPrintLabels({ labelNumbers, success: false, errorMessage: message }).subscribe({
+          error: (e) => console.error('POST label/print/confirm failed:', e)
+        });
+        this.swal.error('Print Error', message);
+      });
   }
 
   retry() {

@@ -825,20 +825,20 @@ export class ApiService {
         return this.http.get(this.baseURL + 'label-print/config', { headers: this.option });
     }
 
-    getLabelPrinters() {
-        return this.http.get(this.baseURL + 'label/printers', { headers: this.option });
-    }
-
-    detectLabelPrinters() {
-        return this.http.post(this.baseURL + 'label/printers/detect', {}, { headers: this.option });
-    }
-
     reserveLabelNumbers(data: any) {
         return this.http.post(this.baseURL + 'label/reserveLabelNumbers', data, { headers: this.option });
     }
 
+    // Builds/validates the TSPL command and marks the batch "Printing" but does NOT send anything to
+    // a printer itself — the browser sends the returned `command` via QZ Tray to whichever printer is
+    // physically attached to the machine it's running on (see label-print.component.ts).
+    // confirmPrintLabels() then reports the real outcome back so the DB status reflects reality.
     printLabels(data: any) {
         return this.http.post(this.baseURL + 'label/print', data, { headers: this.option });
+    }
+
+    confirmPrintLabels(data: any) {
+        return this.http.post(this.baseURL + 'label/print/confirm', data, { headers: this.option });
     }
 
     // Reports (Pre-Binning / Pallet Mapping / Location Mapping / Inventory Details) — mounted at /api/reports.
