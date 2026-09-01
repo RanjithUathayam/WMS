@@ -1,0 +1,25 @@
+.filter_icon {
+  cursor: pointer;
+}
+
+.btn-group-fab .button {
+  padding: 6px 1.2rem;
+  border-radius: 20px;
+  background: #018DB0;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.storage_filter {
+  font-size: 1.4rem;
+  color: #018DB0;
+  font-weight: 500;
+}
+
+.filter_label {
+  font-size: 1.1rem;
+  color: #018DB0;
+  font-weight: 500;
+  margin-bottom: 0.8rem;
+}

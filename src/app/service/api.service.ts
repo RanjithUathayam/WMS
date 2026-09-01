@@ -840,4 +840,49 @@ export class ApiService {
     printLabels(data: any) {
         return this.http.post(this.baseURL + 'label/print', data, { headers: this.option });
     }
+
+    // Reports (Pre-Binning / Pallet Mapping / Location Mapping / Inventory Details) — mounted at /api/reports.
+    // apiCall is one of: 'prebinning' | 'palletmapping' | 'locationmapping' | 'inventorydetails'.
+    private buildReportParams(filters: any, page?: number, pageSize?: number, sortBy?: string, sortDir?: string, exportFormat?: string): URLSearchParams {
+        const params: any = { ...filters };
+        if (page !== undefined) { params.page = page; }
+        if (pageSize !== undefined) { params.pageSize = pageSize; }
+        if (sortBy) { params.sortBy = sortBy; params.sortDir = sortDir || 'ASC'; }
+        if (exportFormat) { params.exportFormat = exportFormat; }
+
+        const queryParams = new URLSearchParams();
+        Object.keys(params).forEach(key => {
+            if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+                queryParams.append(key, params[key]);
+            }
+        });
+        return queryParams;
+    }
+
+    getReportData(apiCall: string, filters: any, page: number, pageSize: number, sortBy?: string, sortDir?: string) {
+        const queryParams = this.buildReportParams(filters, page, pageSize, sortBy, sortDir);
+        const url = `${this.baseURL}reports/${apiCall}?${queryParams.toString()}`;
+        return this.http.get(url, { headers: this.option });
+    }
+
+    exportReportData(apiCall: string, filters: any, sortBy: string, sortDir: string, exportFormat: string, fileNamePrefix: string) {
+        const queryParams = this.buildReportParams(filters, undefined, undefined, sortBy, sortDir, exportFormat);
+        const url = `${this.baseURL}reports/${apiCall}?${queryParams.toString()}`;
+
+        return this.http.get(url, { headers: this.option, responseType: 'blob' as 'json' }).subscribe(
+            (response: Blob) => {
+                const blobUrl = window.URL.createObjectURL(response);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                const now = new Date();
+                let filename = `${fileNamePrefix}_${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}_${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
+                filename += exportFormat === 'excel' ? '.xlsx' : `.${exportFormat}`;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            }
+        );
+    }
 }

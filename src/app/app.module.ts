@@ -30,6 +30,11 @@ import { HhtDeviceRightsComponent } from './hht-device-rights/hht-device-rights.
 import { HomeComponent } from './home/home.component';
 import { InventoryListComponent } from './inventory-list/inventory-list.component';
 import { LocationMasterComponent } from './location-master/location-master.component';
+import { ReportTableComponent } from './components/report-table/report-table.component';
+import { PreBinningReportComponent } from './pre-binning-report/pre-binning-report.component';
+import { PalletMappingReportComponent } from './pallet-mapping-report/pallet-mapping-report.component';
+import { LocationMappingReportComponent } from './location-mapping-report/location-mapping-report.component';
+import { InventoryDetailsReportComponent } from './inventory-details-report/inventory-details-report.component';
 import { UserControlComponent } from './main/user-control/user-control.component';
 import { MainpageComponent } from './mainpage/mainpage.component';
 import { ItemComponent } from './item/item.component';
@@ -57,17 +62,22 @@ import { UserlogComponent } from './userlog/userlog.component';
     HeaderComponent,
     HhtDeviceRightsComponent,
     HomeComponent,
+    InventoryDetailsReportComponent,
     InventoryListComponent,
     ItemComponent,
     LabelPrintComponent,
+    LocationMappingReportComponent,
     LocationMasterComponent,
     LoginComponent,
     MainpageComponent,
     NavComponent,
+    PalletMappingReportComponent,
     PopupComponent,
     PrebinningApprovalComponent,
     PrebinningStatusComponent,
     PrebinningSummaryComponent,
+    PreBinningReportComponent,
+    ReportTableComponent,
     ShortcutsComponent,
     SidenavComponent,
     TableConfigComponent,

@@ -1,0 +1,96 @@
+<section>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center px-4 py-1">
+          <p class="d-flex m-0 filter_icon" (click)="openSidebar()">
+            <span>Filter</span>
+            <i class="fa fa-filter d-flex justify-content-center align-items-center mt-1 ml-3" aria-hidden="true"></i>
+          </p>
+          <div class="btn-group-fab">
+            <button class="button" type="button" (click)="export('csv')">CSV</button>
+            <button class="button ml-2" type="button" (click)="export('excel')">Excel</button>
+            <button class="button ml-2" type="button" (click)="export('pdf')">PDF</button>
+          </div>
+        </div>
+        <div>
+          <app-report-table [columns]="columns" [rows]="rows" [loading]="loading" [page]="page" [pageSize]="pageSize"
+            [totalRecords]="totalRecords" [totalPages]="totalPages" [sortBy]="sortBy" [sortDir]="sortDir"
+            (pageChange)="onPageChange($event)" (sortChange)="onSortChange($event)"></app-report-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div *ngIf="flagset" class="dialog_scrim" (click)="falseSet()"></div>
+
+<section class="sidebar close sidebar_Request" id="sidebar">
+  <div class="container-fluid" [formGroup]="filterForm">
+    <div class="row d-inline">
+      <div class="justify-content-between align-items-center d-flex">
+        <div>
+          <p class="storage_filter">Pallet Mapping Report Filter</p>
+        </div>
+        <div>
+          <button class="button closesidebar" (click)="closesidebar()">
+            <span class="button-content" aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="palletId">Pallet ID :</label>
+        <input type="text" id="palletId" class="form-control" formControlName="palletId">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="boxNumber">Box Number :</label>
+        <input type="text" id="boxNumber" class="form-control" formControlName="boxNumber">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="itemCode">Item Code :</label>
+        <input type="text" id="itemCode" class="form-control" formControlName="itemCode">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="itemName">Item Name :</label>
+        <input type="text" id="itemName" class="form-control" formControlName="itemName">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="warehouseCode">Warehouse :</label>
+        <input type="text" id="warehouseCode" class="form-control" formControlName="warehouseCode">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="status">Status :</label>
+        <select id="status" class="form-control" formControlName="status">
+          <option value="">All</option>
+          <option value="OPEN">Open</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="fromDate">From Date :</label>
+        <input type="date" id="fromDate" class="form-control" formControlName="fromDate">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="toDate">To Date :</label>
+        <input type="date" id="toDate" class="form-control" formControlName="toDate">
+      </div>
+
+      <div class="positionset p-2 py-3 d-flex justify-content-end align-items-center">
+        <button class="button" (click)="searchData()">
+          <span class="button-content">Apply</span>
+        </button>
+        <button class="button ml-3" (click)="clear()">
+          <span class="button-content">Clear</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

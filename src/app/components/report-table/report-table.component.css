@@ -1,0 +1,79 @@
+.table-container {
+    max-width: 100%;
+    overflow-x: auto !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 120px;
+}
+
+.no-records-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+table {
+    width: 100%;
+}
+
+th,
+td {
+    white-space: nowrap;
+}
+
+.fixed-header th {
+    background: #326789;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.fixed-header th,
+.fixed-header td {
+    padding: 10px;
+}
+
+.col-sno {
+    min-width: 50px;
+}
+
+.sortable-col {
+    cursor: pointer;
+    user-select: none;
+}
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px !important;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background-color: #326789 !important;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1 !important;
+}
+
+.total_records {
+    font-size: 1.2rem;
+    color: #018DB0;
+}
+
+.manual-pager .btn-page {
+    border: none;
+    background: #326789;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.manual-pager .btn-page:disabled {
+    background: #9a9999;
+    cursor: not-allowed;
+}

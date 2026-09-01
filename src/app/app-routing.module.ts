@@ -17,6 +17,10 @@ import { BinwisePrebininningActionComponent } from './binwise-prebininning-actio
 import { GrnPushingComponent } from './grn-pushing/grn-pushing.component';
 import { LabelPrintComponent } from './label-print/label-print.component';
 import { LocationMasterComponent } from './location-master/location-master.component';
+import { PreBinningReportComponent } from './pre-binning-report/pre-binning-report.component';
+import { PalletMappingReportComponent } from './pallet-mapping-report/pallet-mapping-report.component';
+import { LocationMappingReportComponent } from './location-mapping-report/location-mapping-report.component';
+import { InventoryDetailsReportComponent } from './inventory-details-report/inventory-details-report.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -37,6 +41,10 @@ const routes: Routes = [
         { path: 'user-control', component: UserControlComponent },
         { path: 'item', component: ItemComponent },
         { path: 'LocationMaster', component: LocationMasterComponent },
+        { path: 'pre_binning_report', component: PreBinningReportComponent },
+        { path: 'pallet_mapping_report', component: PalletMappingReportComponent },
+        { path: 'location_mapping_report', component: LocationMappingReportComponent },
+        { path: 'inventory_details_report', component: InventoryDetailsReportComponent },
     ]
   }
 

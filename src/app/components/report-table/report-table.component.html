@@ -1,0 +1,37 @@
+<div class="table-container gk-table-container" [ngStyle]="{ 'border': !loading && rows?.length == 0 ? '2px solid #dee2e6' : 'none' }">
+  <table class="table table-bordered table-striped mb-2">
+    <thead class="fixed-header">
+      <tr>
+        <th class="col-sno">S.No</th>
+        <th *ngFor="let col of columns" [class.sortable-col]="col.sortable" (click)="onSort(col)">
+          {{ col.header }}
+          <i class="fa mr-1" [ngClass]="sortIcon(col)" aria-hidden="true" *ngIf="col.sortable"></i>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of rows; let i = index">
+        <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+        <td *ngFor="let col of columns">{{ getValue(row, col.data) ?? '-' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="no-records-message" *ngIf="loading">
+    <div><p>Loading...</p></div>
+  </div>
+  <div class="no-records-message" *ngIf="!loading && rows?.length == 0">
+    <div><p class="no_records">No Records Found</p></div>
+  </div>
+</div>
+
+<div class="row mt-3">
+  <div class="col-lg-4 d-flex justify-content-between align-items-center">
+    <p class="mb-0 total_records">Records : <span>{{ totalRecords }}</span></p>
+  </div>
+  <div class="col-lg-8 d-flex justify-content-end align-items-center manual-pager">
+    <button class="btn-page" type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>
+    <span class="mx-2">Page {{ page }} of {{ totalPages || 1 }}</span>
+    <button class="btn-page" type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+  </div>
+</div>

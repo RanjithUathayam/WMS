@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      <div class="sidebar-group" *ngIf="menuRights.transaction_module">
+      <div class="sidebar-group" *ngIf="menuRights.transaction_module || menuRights.report_module">
         <button class="sidebar-toggle"
           type="button"
           (click)="changeTab('Transactions'); closeAllMenus()"
@@ -89,6 +89,18 @@
           </button>
           <button class="sidebar-link" type="button" (click)="selectTab('userlog'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'userlog' }">
             <i class="fa fa-sign-in mr-2"></i>User Login Report
+          </button>
+          <button class="sidebar-link" type="button" *ngIf="menuRights.report_preBinning_list" (click)="selectTab('pre_binning_report'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'pre_binning_report' }">
+            <i class="fa fa-list-alt mr-2"></i>Pre-Binning Report
+          </button>
+          <button class="sidebar-link" type="button" *ngIf="menuRights.report_palletMapping_list" (click)="selectTab('pallet_mapping_report'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'pallet_mapping_report' }">
+            <i class="fa fa-th-large mr-2"></i>Pallet Mapping Report
+          </button>
+          <button class="sidebar-link" type="button" *ngIf="menuRights.report_locationMapping_list" (click)="selectTab('location_mapping_report'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'location_mapping_report' }">
+            <i class="fa fa-map-marker mr-2"></i>Location Mapping Report
+          </button>
+          <button class="sidebar-link" type="button" *ngIf="menuRights.report_inventory_list" (click)="selectTab('inventory_details_report'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'inventory_details_report' }">
+            <i class="fa fa-cubes mr-2"></i>Inventory Details Report
           </button>
         </div>
       </div>

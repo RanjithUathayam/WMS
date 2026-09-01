@@ -143,6 +143,7 @@ export class MainpageComponent implements OnInit {
         status_module: (data.some(right => right.includes('status_'))) ? true : false,
         user_module: (data.some(right => right.includes('user_'))) ? true : false,
         tracking_module: (data.some(right => right.includes('master_'))) ? true : false,
+        report_module: (data.some(right => right.includes('report_'))) ? true : false,
         ...resultss
       };
  
@@ -370,6 +371,22 @@ export class MainpageComponent implements OnInit {
     if (this.router.url.includes('mainpage/prebinning_status')) {
       this.mySelectedTab = 'Operations';
       this.selectedTab = 'prebinning_status';
+    }
+    if (this.router.url.includes('mainpage/pre_binning_report')) {
+      this.mySelectedTab = 'Transactions';
+      this.selectedTab = 'pre_binning_report';
+    }
+    if (this.router.url.includes('mainpage/pallet_mapping_report')) {
+      this.mySelectedTab = 'Transactions';
+      this.selectedTab = 'pallet_mapping_report';
+    }
+    if (this.router.url.includes('mainpage/location_mapping_report')) {
+      this.mySelectedTab = 'Transactions';
+      this.selectedTab = 'location_mapping_report';
+    }
+    if (this.router.url.includes('mainpage/inventory_details_report')) {
+      this.mySelectedTab = 'Transactions';
+      this.selectedTab = 'inventory_details_report';
     }
 
     this.showSelectedTab(); // Ensure that the selected tab is highlighted
