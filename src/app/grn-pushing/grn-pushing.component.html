@@ -105,6 +105,12 @@
           <i class="fa fa-list-ul mr-1"></i>{{ filteredData.length }} Records
         </span>
         <span class="stat-chip">
+          <i class="fa fa-cubes mr-1"></i>Total Quantity: {{ getColumnTotal(['Quantity', 'quantity', 'Qty']) }}
+        </span>
+        <span class="stat-chip">
+          <i class="fa fa-check-square-o mr-1"></i>Total Binned: {{ getColumnTotal(['Binned', 'binned', 'BinnedQty']) }}
+        </span>
+        <span class="stat-chip">
           <i class="fa fa-clock-o mr-1"></i>{{ lastUpdatedDateTime | date: 'dd-MM-yyyy hh:mm:ss a' }}
         </span>
       </div>
@@ -139,7 +145,12 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th class="col-check">Select</th>
+                <th class="col-check">
+                  <input
+                    type="checkbox"
+                    [checked]="isAllDetailSelected()"
+                    (change)="toggleAllDetailSelection($event)">
+                </th>
                 <th class="col-sortable" (click)="onDetailSort('OrderNo', 'text')">Order No</th>
                 <th class="col-sortable" (click)="onDetailSort('DocType', 'text')">Doc Type</th>
                 <th class="col-sortable" (click)="onDetailSort('ItemCode', 'text')">Item Code</th>
@@ -154,14 +165,16 @@
                 <th><input type="search" class="filter-input" placeholder="Search" [(ngModel)]="detailFilters['DocType']" (input)="applyDetailFilters()"></th>
                 <th><input type="search" class="filter-input" placeholder="Search" [(ngModel)]="detailFilters['ItemCode']" (input)="applyDetailFilters()"></th>
                 <th><input type="search" class="filter-input" placeholder="Search" [(ngModel)]="detailFilters['ItemName']" (input)="applyDetailFilters()"></th>
-                <th></th>
-                <th></th>
-                <th></th>
+                <th><input type="search" class="filter-input" placeholder="Search" [(ngModel)]="detailFilters['Quantity']" (input)="applyDetailFilters()"></th>
+                <th><input type="search" class="filter-input" placeholder="Search" [(ngModel)]="detailFilters['RequestQty']" (input)="applyDetailFilters()"></th>
+                <th><input type="search" class="filter-input" placeholder="Search" [(ngModel)]="detailFilters['Binned']" (input)="applyDetailFilters()"></th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of filteredDetailData | paginate: { itemsPerPage: detailItemsPerPage, currentPage: detailPage }" class="row-selected">
-                <td class="col-check-cell"><input type="checkbox" checked></td>
+              <tr *ngFor="let item of filteredDetailData | paginate: { itemsPerPage: detailItemsPerPage, currentPage: detailPage }" [class.row-selected]="item.selected">
+                <td class="col-check-cell">
+                  <input type="checkbox" [checked]="item.selected" (change)="toggleDetailSelection(item)">
+                </td>
                 <td>{{ getListValue(item, ['OrderNo', 'orderNo', 'DocNum']) }}</td>
                 <td>{{ getListValue(item, ['DocType', 'docType', 'Process']) }}</td>
                 <td>{{ getListValue(item, ['ItemCode', 'itemCode']) }}</td>
@@ -183,6 +196,17 @@
     </div>
 
     <div class="modal-footer">
+      <div class="footer-stats">
+        <span class="stat-chip">
+          <i class="fa fa-cubes mr-1"></i>Total Qty: {{ getDetailColumnTotal(['Quantity', 'Qty', 'quantity']) }}
+        </span>
+        <span class="stat-chip">
+          <i class="fa fa-truck mr-1"></i>Total Requested: {{ getDetailColumnTotal(['RequestQty', 'ReqQty', 'requestQty']) }}
+        </span>
+        <span class="stat-chip">
+          <i class="fa fa-check-square-o mr-1"></i>Total Binned: {{ getDetailColumnTotal(['Binned', 'binnedQty', 'BinnedQty']) }}
+        </span>
+      </div>
       <pagination-controls class="p-0" [maxSize]="5" (pageChange)="detailPage = $event"></pagination-controls>
       <button class="grn-btn grn-btn--outline" (click)="closeOrderDetails()">
         <i class="fa fa-times mr-1"></i>Close

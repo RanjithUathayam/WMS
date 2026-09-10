@@ -63,6 +63,39 @@ td {
     color: #018DB0;
 }
 
+.gk-footer-stats {
+    gap: 18px;
+}
+
+.gk-footer-stats .total_records {
+    margin: 0;
+}
+
+.filter-row th {
+    background: #fcfeff;
+    padding: 5px 8px;
+    position: sticky;
+    top: 40px;
+    z-index: 1;
+}
+
+.filter-input {
+    width: 100%;
+    border: 1px solid #dce8f2;
+    border-radius: 7px;
+    background: #ffffff;
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    color: #334155;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-input:focus {
+    border-color: #016DB0;
+    box-shadow: 0 0 0 3px rgba(1, 109, 176, 0.12);
+}
+
 .manual-pager .btn-page {
     border: none;
     background: #326789;

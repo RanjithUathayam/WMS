@@ -22,8 +22,8 @@ export class InventoryDetailsReportComponent implements OnInit {
     { header: 'Box Number', data: 'boxNumber', sortable: true },
     { header: 'Item Code', data: 'itemCode', sortable: true },
     { header: 'Item Group', data: 'itemGroup' },
-    { header: 'Quantity', data: 'quantity', sortable: true },
-    { header: 'Allocated Qty', data: 'allocatedQty' },
+    { header: 'Quantity', data: 'quantity', sortable: true, sum: true },
+    { header: 'Allocated Qty', data: 'allocatedQty', sum: true },
     { header: 'Status', data: 'status', sortable: true },
     { header: 'Item Name', data: 'itemMaster.itemName' },
     { header: 'Category', data: 'itemMaster.category' },
@@ -43,6 +43,7 @@ export class InventoryDetailsReportComponent implements OnInit {
   totalPages: number = 0;
   sortBy: string = 'createdAt';
   sortDir: string = 'DESC';
+  totals: { [key: string]: number } = {};
 
   constructor(private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private fb: FormBuilder) { }
 
@@ -81,16 +82,19 @@ export class InventoryDetailsReportComponent implements OnInit {
         this.rows = res.data;
         this.totalRecords = res.pagination.totalRecords;
         this.totalPages = res.pagination.totalPages;
+        this.totals = res.totals || {};
       } else {
         this.rows = [];
         this.totalRecords = 0;
         this.totalPages = 0;
+        this.totals = {};
         this.swal.error('Error', res.message);
       }
     }, (err: any) => {
       this.loading = false;
       this.appComponent.hideLoading();
       this.rows = [];
+      this.totals = {};
       this.swal.error('Error', err?.error?.message || 'Failed to load the Inventory Details report.');
     });
   }

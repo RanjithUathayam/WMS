@@ -21,7 +21,7 @@ export class PalletMappingReportComponent implements OnInit {
     { header: 'Warehouse', data: 'warehouseCode', sortable: true },
     { header: 'Box Total Qty', data: 'boxTotalQty', sortable: true },
     { header: 'Item Code', data: 'itemCode', sortable: true },
-    { header: 'Item Qty', data: 'itemQty', sortable: true },
+    { header: 'Item Qty', data: 'itemQty', sortable: true, sum: true },
     { header: 'Item Name', data: 'itemMaster.itemName' },
     { header: 'Item Group', data: 'itemMaster.itemGroup' },
     { header: 'Category', data: 'itemMaster.category' },
@@ -40,6 +40,7 @@ export class PalletMappingReportComponent implements OnInit {
   totalPages: number = 0;
   sortBy: string = 'mappedAt';
   sortDir: string = 'DESC';
+  totals: { [key: string]: number } = {};
 
   constructor(private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private fb: FormBuilder) { }
 
@@ -75,16 +76,19 @@ export class PalletMappingReportComponent implements OnInit {
         this.rows = res.data;
         this.totalRecords = res.pagination.totalRecords;
         this.totalPages = res.pagination.totalPages;
+        this.totals = res.totals || {};
       } else {
         this.rows = [];
         this.totalRecords = 0;
         this.totalPages = 0;
+        this.totals = {};
         this.swal.error('Error', res.message);
       }
     }, (err: any) => {
       this.loading = false;
       this.appComponent.hideLoading();
       this.rows = [];
+      this.totals = {};
       this.swal.error('Error', err?.error?.message || 'Failed to load the Pallet Mapping report.');
     });
   }

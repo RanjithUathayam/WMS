@@ -13,7 +13,7 @@
         </p>
         <div>
           <app-report-table [columns]="columns" [rows]="rows" [loading]="loading" [page]="page" [pageSize]="pageSize"
-            [totalRecords]="totalRecords" [totalPages]="totalPages" [sortBy]="sortBy" [sortDir]="sortDir"
+            [totalRecords]="totalRecords" [totalPages]="totalPages" [sortBy]="sortBy" [sortDir]="sortDir" [totals]="totals"
             (pageChange)="onPageChange($event)" (sortChange)="onSortChange($event)"></app-report-table>
         </div>
       </div>

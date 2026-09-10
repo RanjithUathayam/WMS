@@ -22,7 +22,7 @@
                             <!-- Search Row -->
                             <tr *ngIf="filteredRecords?.length > 0 || tableData?.length > 0 || filters" style="width: 100%;">
                                 <td class="p-0" *ngFor="let item of tableHeader">
-                                    <input *ngIf="item.search" type="search" class="filter-input"
+                                    <input *ngIf="isColumnSearchable(item)" type="search" class="filter-input"
                                         placeholder="Search..." [(ngModel)]="filters[item.data]"
                                         (input)="applyFilters()">
                                 </td>
@@ -131,6 +131,9 @@
                     </p>
                     <p *ngIf="exportApi == 'transaction/inventory'" class="total_records">
                         Total Records : <span id="part_record">{{totRec || filteredRecords?.length}}</span>
+                    </p>
+                    <p class="total_records" *ngFor="let h of sumHeaders">
+                        Total {{h.header}} : <span>{{getHeaderSum(h)}}</span>
                     </p>
                 </div>
             </div>

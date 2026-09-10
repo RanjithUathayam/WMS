@@ -260,6 +260,19 @@ export class GrnPushingComponent implements OnInit {
     this.showDetailModal = false;
   }
 
+  toggleDetailSelection(item: any) {
+    item.selected = !item.selected;
+  }
+
+  isAllDetailSelected(): boolean {
+    return this.filteredDetailData.length > 0 && this.filteredDetailData.every((item) => item.selected);
+  }
+
+  toggleAllDetailSelection(event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.filteredDetailData.forEach((item) => (item.selected = checked));
+  }
+
   submitRequest() {
     if (!this.selectedRow) {
       Swal.fire({
@@ -362,6 +375,20 @@ export class GrnPushingComponent implements OnInit {
     if (!this.isDetailAscending) {
       this.filteredDetailData.reverse();
     }
+  }
+
+  getColumnTotal(keys: string[]): number {
+    return this.filteredData.reduce((total, item) => {
+      const value = this.getListValue(item, keys, '0');
+      return total + (Number(value) || 0);
+    }, 0);
+  }
+
+  getDetailColumnTotal(keys: string[]): number {
+    return this.filteredDetailData.reduce((total, item) => {
+      const value = this.getListValue(item, keys, '0');
+      return total + (Number(value) || 0);
+    }, 0);
   }
 
   getListValue(item: any, keys: string[], fallback = '-') {

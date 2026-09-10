@@ -21,8 +21,8 @@ export class PreBinningReportComponent implements OnInit {
     { header: 'Item Code', data: 'itemCode', sortable: true },
     { header: 'Item Name', data: 'itemName', sortable: true },
     { header: 'Item Group', data: 'itemGroup', sortable: true },
-    { header: 'Binned Qty', data: 'binnedQty', sortable: true },
-    { header: 'Requested Qty', data: 'requestedQty', sortable: true },
+    { header: 'Binned Qty', data: 'binnedQty', sortable: true, sum: true },
+    { header: 'Requested Qty', data: 'requestedQty', sortable: true, sum: true },
     { header: 'Binning Status', data: 'binningStatus', sortable: true },
     { header: 'Item Status', data: 'itemStatus', sortable: true },
     { header: 'Category', data: 'itemMaster.category' },
@@ -43,6 +43,7 @@ export class PreBinningReportComponent implements OnInit {
   totalPages: number = 0;
   sortBy: string = 'createdDate';
   sortDir: string = 'DESC';
+  totals: { [key: string]: number } = {};
 
   constructor(private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private fb: FormBuilder) { }
 
@@ -77,16 +78,19 @@ export class PreBinningReportComponent implements OnInit {
         this.rows = res.data;
         this.totalRecords = res.pagination.totalRecords;
         this.totalPages = res.pagination.totalPages;
+        this.totals = res.totals || {};
       } else {
         this.rows = [];
         this.totalRecords = 0;
         this.totalPages = 0;
+        this.totals = {};
         this.swal.error('Error', res.message);
       }
     }, (err: any) => {
       this.loading = false;
       this.appComponent.hideLoading();
       this.rows = [];
+      this.totals = {};
       this.swal.error('Error', err?.error?.message || 'Failed to load the Pre-Binning report.');
     });
   }

@@ -322,17 +322,26 @@ export class DynamicTableComponent {
 
             this.offlineDownload = true
             const filterValue = String(this.filters[key]).toLowerCase();
-            const recordValue = String(record[key]).toLowerCase();
-            if (this.tableHeader.find(header => header.data === key)?.search) {
-                return recordValue.includes(filterValue);
-            } 
-            else 
-            {
-                // If the column is not searchable, just return true to include the record
-                return true;
-            }
+            const recordValue = String(record[key] ?? '').toLowerCase();
+            return recordValue.includes(filterValue);
         });
-    }); 
+    });
+  }
+
+  get useGenericFilter(): boolean {
+    return this.exportApi !== 'transaction/inventory' && this.exportApi !== 'transaction/item' && this.exportApi !== 'history/loadUnLoad';
+  }
+
+  isColumnSearchable(item: any): boolean {
+    return this.useGenericFilter ? item.search !== false : !!item.search;
+  }
+
+  get sumHeaders(): any[] {
+    return (this.tableHeader || []).filter((h: any) => h.sum === true || /qty|quantity/i.test(h.data || ''));
+  }
+
+  getHeaderSum(h: any): number {
+    return (this.filteredRecords || []).reduce((total: number, row: any) => total + (Number(row[h.data]) || 0), 0);
   }
 
   ngAfterViewInit(): void {

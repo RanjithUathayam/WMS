@@ -32,7 +32,18 @@ export class PrebinningStatusComponent implements OnInit {
   grndetails: any;
   filters: { [key: string]: string } = {};
   filteredArray: any = [];
-  filterHeader: any = [{ data: 'GRNNo', search: true }, { data: 'GRNType', search: true }, { data: 'ItemCode', search: true }, { data: 'BinID', search: true }];
+  filterHeader: any = [
+    { data: 'GRNNo', search: true },
+    { data: 'Type', search: true },
+    { data: 'ItemCode', search: true },
+    { data: 'ItemName', search: true },
+    { data: 'ItemGroup', search: true },
+    { data: 'BinID', search: true },
+    { data: 'Quantity', search: true },
+    { data: 'Binning_Qty', search: true },
+    { data: 'GRNStatus', search: true }
+  ];
+  private readonly clientSideFilterKeys = ['Type', 'ItemName', 'ItemGroup', 'Quantity', 'Binning_Qty', 'GRNStatus'];
   itemList: any;
   lastUpdatedDateTime: any = new Date().toLocaleString()
   debounceTimer: any;
@@ -61,28 +72,24 @@ export class PrebinningStatusComponent implements OnInit {
 
 
   applyFilters() {
-    // this.filteredArray = [];
-    // this.filteredArray = this.grndetails.filter(record => {
-    //   return Object.keys(this.filters).every(key => {
-    //     if (this.filters[key] === null || this.filters[key] === undefined || this.filters[key] === '') {
-    //       return true; // Don't apply filter if it's empty
-    //     }
-    //     const filterValue = String(this.filters[key]).toLowerCase(); 
-    //     const recordValue = String(record[key]).toLowerCase();
-        
-    //     if (this.filterHeader.find(header => header.data === key)?.search) {
-    //       return recordValue.includes(filterValue);
-    //     } else {
-    //       // If the column is not searchable, just return true to include the record
-    //       return true;
-    //     }
-    //   });
-
-    // }); 
     clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
+        this.p = 1;
         this.prebinningdata()
-    },500) 
+    },500)
+  }
+
+  private applyClientSideFilters(): void {
+    this.filteredArray = (this.grndetails || []).filter((record: any) =>
+      this.clientSideFilterKeys.every((key) => {
+        const filterValue = (this.filters[key] || '').trim().toLowerCase();
+        if (!filterValue) {
+          return true;
+        }
+        const recordValue = String(record[key] ?? '').toLowerCase();
+        return recordValue.includes(filterValue);
+      })
+    );
   }
 
 
@@ -128,6 +135,10 @@ onSort(key: string, type: string): void {
   this.sortData(key, type);
 }
 
+getColumnSum(key: string): number {
+  return (this.filteredArray || []).reduce((total: number, row: any) => total + (Number(row[key]) || 0), 0);
+}
+
 // new sorting code
   prebinningdata() {
     this.lastUpdatedDateTime = new Date().toLocaleString();
@@ -148,8 +159,8 @@ onSort(key: string, type: string): void {
         (response: any) => {
         if(response.status === 1) {
             this.appComponent.hideLoading();
-            this.grndetails = response.data; 
-            this.filteredArray = this.grndetails;
+            this.grndetails = response.data;
+            this.applyClientSideFilters();
         }
         else if(response.status === 0) {
             this.appComponent.hideLoading();

@@ -77,20 +77,38 @@
                   <input type="search" class="filter-input" placeholder="search"
                     [(ngModel)]="filters['GRNNo']" (input)="applyFilters()">
                 </td>
-                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['Type']" (input)="applyFilters()">
+                </td>
                 <td class="p-0">
                   <input type="search" class="filter-input" placeholder="search"
                     [(ngModel)]="filters['ItemCode']" (input)="applyFilters()">
                 </td>
-                <td></td>
-                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['ItemName']" (input)="applyFilters()">
+                </td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['ItemGroup']" (input)="applyFilters()">
+                </td>
                 <td class="p-0">
                   <input type="search" class="filter-input" placeholder="search"
                     [(ngModel)]="filters['BinID']" (input)="applyFilters()">
                 </td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['Quantity']" (input)="applyFilters()">
+                </td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['Binning_Qty']" (input)="applyFilters()">
+                </td>
+                <td class="p-0">
+                  <input type="search" class="filter-input" placeholder="search"
+                    [(ngModel)]="filters['GRNStatus']" (input)="applyFilters()">
+                </td>
               </tr>
               <tr style="width: 100%;" *ngFor="let item of filteredArray| paginate: { itemsPerPage, currentPage: p }; let i = index;">
                 <td>{{ i + 1 }}</td>
@@ -114,11 +132,17 @@
           </div>
         </div>
         <div class="row d-flex justify-content-center align-items-center">
-          <div class="col-lg-4 col-md-2 justify-content-start align-items-center d-flex">
+          <div class="col-lg-4 col-md-2 justify-content-start align-items-center d-flex flex-wrap">
             <p class="mb-0 d-flex total_records">
               <span class="d-lg-none d-md-block">Count : </span>
               <span class="d-none d-lg-block">Total Records : </span>
               <span>&nbsp;{{filteredArray?.length}}</span>
+            </p>
+            <p class="mb-0 d-flex total_records ml-3">
+              Total GRN Quantity : <span>&nbsp;{{getColumnSum('Quantity')}}</span>
+            </p>
+            <p class="mb-0 d-flex total_records ml-3">
+              Total Binned Quantity : <span>&nbsp;{{getColumnSum('Binning_Qty')}}</span>
             </p>
           </div>
           <div class="col-3">

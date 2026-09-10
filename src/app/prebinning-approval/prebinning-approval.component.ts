@@ -25,8 +25,15 @@ export class PrebinningApprovalComponent implements OnInit {
     { data: 'GRNNo', search: true },
     { data: 'GRNType', search: true },
     { data: 'ItemCode', search: true },
+    { data: 'ItemName', search: true },
+    { data: 'ItemGroup', search: true },
     { data: 'BinID', search: true },
+    { data: 'reqQty', search: true },
+    { data: 'binnedQty', search: true },
+    { data: 'ItemStatus', search: true },
+    { data: 'remark', search: true },
   ];
+  private readonly clientSideFilterKeys = ['GRNType', 'ItemName', 'ItemGroup', 'reqQty', 'binnedQty', 'ItemStatus', 'remark'];
 
   public remarksData: Array<Select2OptionData>;
   public options: Options = {
@@ -94,28 +101,24 @@ export class PrebinningApprovalComponent implements OnInit {
 
 
   applyFilters() {
-    // this.filteredData = []; 
-    // this.filteredData = this.getprebinning.filter(record => {
-    //   return Object.keys(this.filters).every(key => {
-    //     if (this.filters[key] === null || this.filters[key] === undefined || this.filters[key] === '') {
-    //       return true; // Don't apply filter if it's empty
-    //     }
-    //     const filterValue = String(this.filters[key]).toLowerCase();
-    //     const recordValue = String(record[key]).toLowerCase();
-        
-    //     if (this.filterHeader.find(header => header.data === key)?.search) {
-    //       return recordValue.includes(filterValue);
-    //     } else {
-    //       // If the column is not searchable, just return true to include the record
-    //       return true;
-    //     }
-    //   });
-      
-    // }); 
     clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
+        this.p = 1;
         this.getprebinningdata()
-    },500) 
+    },500)
+  }
+
+  private applyClientSideFilters(): void {
+    this.filteredData = (this.getprebinning || []).filter((record: any) =>
+      this.clientSideFilterKeys.every((key) => {
+        const filterValue = (this.filters[key] || '').trim().toLowerCase();
+        if (!filterValue) {
+          return true;
+        }
+        const recordValue = String(record[key] ?? '').toLowerCase();
+        return recordValue.includes(filterValue);
+      })
+    );
   }
 
 
@@ -161,6 +164,10 @@ onSort(key: string, type: string): void {
     this.sortData(key, type)
 }
 
+getColumnSum(key: string): number {
+  return (this.filteredData || []).reduce((total: number, row: any) => total + (Number(row[key]) || 0), 0);
+}
+
 
 // new sorting code
 
@@ -196,9 +203,9 @@ onSort(key: string, type: string): void {
                 console.error('Expected an array but got:', typeof res.data); 
             }
 
-            this.filteredData = this.getprebinning;
-            
-            this.appComponent.hideLoading();  
+            this.applyClientSideFilters();
+
+            this.appComponent.hideLoading();
         } 
         else if (res.status === 0) {
           this.appComponent.hideLoading();

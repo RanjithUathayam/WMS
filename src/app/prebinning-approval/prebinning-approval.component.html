@@ -92,15 +92,22 @@
                     [(ngModel)]="filters['GRNNo']" (input)="applyFilters()"></td>
                 <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
                     [(ngModel)]="filters['ItemCode']" (input)="applyFilters()"></td>
-                <td></td>
-                <td></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['ItemName']" (input)="applyFilters()"></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['ItemGroup']" (input)="applyFilters()"></td>
                 <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
                   [(ngModel)]="filters['BinID']" (input)="applyFilters()"></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['reqQty']" (input)="applyFilters()"></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['binnedQty']" (input)="applyFilters()"></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['ItemStatus']" (input)="applyFilters()"></td>
+                <td class="p-0"> <input type="search" class="filter-input w-100" placeholder="search"
+                    [(ngModel)]="filters['remark']" (input)="applyFilters()"></td>
                 <td></td>
                 <td></td>
-                <td></td>
-                <td></td>
-                <td></td>   
               </tr>
               <tr style="width: 100%;" *ngFor="let item of filteredData | paginate: { itemsPerPage, currentPage: p }; let i = index;">
                 <td class="table_data_font col-sno">{{ i + 1 }}</td>
@@ -133,13 +140,15 @@
       </div>
 
 
-      <div class="col-2 justify-content-start align-items-center d-flex" style="height: 6vh;">
-        <!-- <p class="mb-0 d-flex total_records">
-              <span class="d-lg-none">Count : </span> <span class="d-none d-lg-block">Records :
-              </span><span>&nbsp;{{getprebinning.length}}</span>
-            </p> -->
-        <p class="mb-0 d-flex total_records">
+      <div class="col-2 justify-content-start align-items-center d-flex flex-wrap" style="height: 6vh;">
+        <p class="mb-0 d-flex total_records mr-3">
           <span>Records : {{filteredData.length}}</span>
+        </p>
+        <p class="mb-0 d-flex total_records mr-3">
+          <span>Tot Grn Item Qty : {{getColumnSum('reqQty')}}</span>
+        </p>
+        <p class="mb-0 d-flex total_records">
+          <span>Tot Grn Binned Qty : {{getColumnSum('binnedQty')}}</span>
         </p>
       </div>
       <div class="col-6" style="height: 6vh;display: flex;justify-content: space-evenly;align-items: center;">
