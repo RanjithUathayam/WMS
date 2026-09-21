@@ -1,0 +1,33 @@
+<div class="report-toolbar">
+  <div class="toolbar-search">
+    <i class="fa fa-search search-icon" aria-hidden="true"></i>
+    <input type="search" class="search-input" [placeholder]="searchPlaceholder" [ngModel]="searchValue"
+      (ngModelChange)="onSearchInput($event)">
+  </div>
+
+  <div class="toolbar-actions">
+    <button type="button" class="toolbar-btn filter-btn" [class.is-active]="activeFilterCount > 0" (click)="filterClick.emit()">
+      <i class="fa fa-filter" aria-hidden="true"></i>
+      <span>Filter</span>
+      <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+    </button>
+
+    <button type="button" class="toolbar-btn clear-btn" *ngIf="hasActive" (click)="onClearAll()" title="Clear search and filters">
+      <i class="fa fa-times" aria-hidden="true"></i>
+      <span>Clear</span>
+    </button>
+
+    <div class="export-dropdown">
+      <button type="button" class="toolbar-btn export-btn" (click)="toggleExportMenu()">
+        <i class="fa fa-download" aria-hidden="true"></i>
+        <span>Export</span>
+        <i class="fa fa-caret-down caret" aria-hidden="true"></i>
+      </button>
+      <div class="export-menu" *ngIf="exportMenuOpen">
+        <button type="button" (click)="onExport('csv')"><i class="fa fa-file-text-o" aria-hidden="true"></i> CSV</button>
+        <button type="button" (click)="onExport('excel')"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Excel</button>
+        <button type="button" (click)="onExport('pdf')"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> PDF</button>
+      </div>
+    </div>
+  </div>
+</div>

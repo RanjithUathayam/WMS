@@ -1,3 +1,20 @@
+:root {
+  /* Shared report theme tokens — used by app-report-table and the
+     inventory-details / location-mapping / pallet-mapping / pre-binning
+     report components so their colors/spacing stay in sync in one place. */
+  --report-primary: #018DB0;
+  --report-primary-dark: #016DB0;
+  --report-header-bg: #326789;
+  --report-border: #dce8f2;
+  --report-surface: #ffffff;
+  --report-surface-muted: #f4f8fa;
+  --report-sidebar-bg: #eef3f6;
+  --report-text: #334155;
+  --report-radius: 10px;
+  --report-radius-sm: 7px;
+  --report-shadow: 0 2px 12px rgba(15, 42, 67, 0.10);
+}
+
 body {
   background: #E0F3F6 !important;
 }

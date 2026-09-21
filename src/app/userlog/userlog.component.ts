@@ -91,6 +91,7 @@ export class UserlogComponent implements OnInit {
   clear() {
     this.fromDate = new Date().toISOString().split('T')[0];
     this.toDate = new Date().toISOString().split('T')[0];
+    this.searchData();
   }
   openSidebar() {
     const sidebar = document.querySelector<HTMLElement>('.sidebar');

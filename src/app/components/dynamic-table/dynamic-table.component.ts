@@ -60,7 +60,8 @@ export class DynamicTableComponent {
     if (!item.ItemName) return;
     this.expandedRows[item.ItemName] = !this.expandedRows[item.ItemName];
   }
-  constructor(private modalService: NgbModal, private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private breakpointObserver: BreakpointObserver) {
+  constructor(private modalService: NgbModal, private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private breakpointObserver: BreakpointObserver,
+    private csvExportService: CsvExportService, private excelExportService: ExcelExportService, private pdfExportService: PdfExportService) {
     this.expandedRows = {};
   }
  
@@ -397,9 +398,43 @@ export class DynamicTableComponent {
  
     if (this.exportApi == 'history/userLog') {
       this.apiservice.getUserLog(this.userLogApiDataFilter, data);
+      return;
     }
-   
- 
+
+    if (this.exportApi !== 'transaction/item' && this.exportApi !== 'transaction/inventory') {
+      this.exportLoadedRecords(data);
+    }
+  }
+
+  // Fallback for screens (e.g. User Entry Log) whose backend endpoint has no server-side
+  // export support: builds the file client-side from whatever is currently on screen
+  // (respecting the active column filters), using the same header labels as the table.
+  private exportLoadedRecords(format: string): void {
+    const rows = this.filteredRecords?.length ? this.filteredRecords : this.tableData;
+    if (!rows || rows.length === 0) {
+      this.swal.error('Export Failed', 'There is no data to export.');
+      return;
+    }
+
+    const headers = this.tableHeader || [];
+    const exportRows = rows.map((row: any) => {
+      const exportRow: any = {};
+      if (headers.length) {
+        headers.forEach((h: any) => { exportRow[h.header] = row[h.data] ?? ''; });
+      } else {
+        Object.assign(exportRow, row);
+      }
+      return exportRow;
+    });
+
+    const fileName = (this.exportTitle || 'Export').replace(/\s+/g, '_');
+    if (format === 'csv') {
+      this.csvExportService.exportToCsv(exportRows, fileName);
+    } else if (format === 'excel') {
+      this.excelExportService.exportToExcel(exportRows, fileName);
+    } else if (format === 'pdf') {
+      this.pdfExportService.exportToPdf(exportRows, fileName);
+    }
   }
   getDismissReason(reason: any): string {
     if (reason === ModalDismissReasons.ESC) {

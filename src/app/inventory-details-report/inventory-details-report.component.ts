@@ -13,6 +13,9 @@ import { ReportColumn } from '../components/report-table/report-table.component'
 export class InventoryDetailsReportComponent implements OnInit {
   flagset: boolean = false;
   filterForm!: FormGroup;
+  searchTerm: string = '';
+  private defaultFromDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  private defaultToDate = new Date().toISOString().split('T')[0];
 
   columns: ReportColumn[] = [
     { header: 'Warehouse', data: 'warehouseCode', sortable: true },
@@ -57,8 +60,8 @@ export class InventoryDetailsReportComponent implements OnInit {
       palletId: [''],
       boxNumber: [''],
       status: [''],
-      fromDate: [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]],
-      toDate: [new Date().toISOString().split('T')[0]]
+      fromDate: [this.defaultFromDate],
+      toDate: [this.defaultToDate]
     });
     this.load();
   }
@@ -68,8 +71,30 @@ export class InventoryDetailsReportComponent implements OnInit {
     return {
       itemCode: v.itemCode, itemName: v.itemName, itemGroup: v.itemGroup, warehouseCode: v.warehouseCode,
       locationCode: v.locationCode, palletId: v.palletId, boxNumber: v.boxNumber, status: v.status,
-      fromDate: v.fromDate, toDate: v.toDate
+      fromDate: v.fromDate, toDate: v.toDate, search: this.searchTerm
     };
+  }
+
+  get activeFilterCount(): number {
+    const v = this.filterForm?.value || {};
+    let count = 0;
+    if (v.itemCode) count++;
+    if (v.itemName) count++;
+    if (v.itemGroup) count++;
+    if (v.warehouseCode) count++;
+    if (v.locationCode) count++;
+    if (v.palletId) count++;
+    if (v.boxNumber) count++;
+    if (v.status) count++;
+    if (v.fromDate !== this.defaultFromDate) count++;
+    if (v.toDate !== this.defaultToDate) count++;
+    return count;
+  }
+
+  onSearchChange(term: string): void {
+    this.searchTerm = term;
+    this.page = 1;
+    this.load();
   }
 
   load(): void {
@@ -105,10 +130,11 @@ export class InventoryDetailsReportComponent implements OnInit {
   }
 
   clear(): void {
+    this.searchTerm = '';
     this.filterForm.reset({
       itemCode: '', itemName: '', itemGroup: '', warehouseCode: '', locationCode: '', palletId: '', boxNumber: '', status: '',
-      fromDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      toDate: new Date().toISOString().split('T')[0]
+      fromDate: this.defaultFromDate,
+      toDate: this.defaultToDate
     });
     this.searchData();
   }
@@ -126,7 +152,8 @@ export class InventoryDetailsReportComponent implements OnInit {
   }
 
   export(format: string): void {
-    this.apiservice.exportReportData('inventorydetails', this.buildFilters(), this.sortBy, this.sortDir, format, 'Inventory_Details_Report');
+    this.apiservice.exportReportData('inventorydetails', this.buildFilters(), this.sortBy, this.sortDir, format, 'Inventory_Details_Report',
+      (err: any) => this.swal.error('Export Failed', err?.error?.message || 'Failed to export the Inventory Details report.'));
   }
 
   openSidebar(): void {

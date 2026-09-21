@@ -1,0 +1,167 @@
+.report-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--report-surface);
+  border: 1px solid var(--report-border);
+  border-radius: var(--report-radius);
+  box-shadow: var(--report-shadow);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.toolbar-search {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  border: 1px solid var(--report-border);
+  border-radius: 999px;
+  background: var(--report-surface);
+  padding: 8px 14px 8px 32px;
+  font-size: 0.9rem;
+  color: var(--report-text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.search-input:focus {
+  border-color: var(--report-primary-dark);
+  box-shadow: 0 0 0 3px rgba(1, 109, 176, 0.12);
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--report-border);
+  background: var(--report-surface);
+  color: var(--report-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.toolbar-btn:hover {
+  background: rgba(1, 141, 176, 0.08);
+}
+
+.filter-btn.is-active {
+  background: var(--report-primary);
+  border-color: var(--report-primary);
+  color: #fff;
+}
+
+.filter-btn.is-active:hover {
+  background: var(--report-primary-dark);
+}
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--report-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.filter-btn.is-active .filter-badge {
+  background: #fff;
+  color: var(--report-primary-dark);
+}
+
+.clear-btn {
+  color: #b3261e;
+  border-color: #f3d4d1;
+}
+
+.clear-btn:hover {
+  background: #fdf1f0;
+}
+
+.export-dropdown {
+  position: relative;
+}
+
+.export-btn .caret {
+  font-size: 0.8rem;
+}
+
+.export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  background: var(--report-surface);
+  border: 1px solid var(--report-border);
+  border-radius: var(--report-radius-sm);
+  box-shadow: var(--report-shadow);
+  min-width: 140px;
+  overflow: hidden;
+}
+
+.export-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 0.85rem;
+  color: var(--report-text);
+  cursor: pointer;
+}
+
+.export-menu button:hover {
+  background: var(--report-surface-muted);
+  color: var(--report-primary-dark);
+}
+
+@media (max-width: 640px) {
+  .toolbar-search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+  }
+}

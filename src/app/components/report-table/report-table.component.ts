@@ -27,25 +27,10 @@ export class ReportTableComponent {
   @Output() pageChange = new EventEmitter<number>();
   @Output() sortChange = new EventEmitter<{ sortBy: string, sortDir: string }>();
 
-  filters: { [key: string]: string } = {};
-
   getValue(row: any, path: string): any {
     if (!path || row == null) return null;
     const value = path.split('.').reduce((acc: any, key: string) => (acc == null ? acc : acc[key]), row);
     return value === undefined ? null : value;
-  }
-
-  get filteredRows(): any[] {
-    const activeKeys = Object.keys(this.filters).filter((key) => (this.filters[key] || '').trim() !== '');
-    if (activeKeys.length === 0) return this.rows;
-
-    return this.rows.filter((row) =>
-      activeKeys.every((key) => {
-        const filterValue = this.filters[key].trim().toLowerCase();
-        const rowValue = String(this.getValue(row, key) ?? '').toLowerCase();
-        return rowValue.includes(filterValue);
-      })
-    );
   }
 
   get sumColumns(): ReportColumn[] {
@@ -53,11 +38,13 @@ export class ReportTableComponent {
   }
 
   getColumnSum(col: ReportColumn): number {
+    // Sums reflect the whole filtered/searched result set on the server, not just this page,
+    // so they stay correct regardless of which page is currently displayed.
     const overallTotal = this.totals ? this.totals[col.data] : undefined;
     if (overallTotal !== undefined && overallTotal !== null) {
       return overallTotal;
     }
-    return this.filteredRows.reduce((total, row) => total + (Number(this.getValue(row, col.data)) || 0), 0);
+    return this.rows.reduce((total, row) => total + (Number(this.getValue(row, col.data)) || 0), 0);
   }
 
   sortIcon(column: ReportColumn): string {

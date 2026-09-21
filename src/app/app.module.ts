@@ -31,6 +31,7 @@ import { HomeComponent } from './home/home.component';
 import { InventoryListComponent } from './inventory-list/inventory-list.component';
 import { LocationMasterComponent } from './location-master/location-master.component';
 import { ReportTableComponent } from './components/report-table/report-table.component';
+import { ReportToolbarComponent } from './components/report-toolbar/report-toolbar.component';
 import { PreBinningReportComponent } from './pre-binning-report/pre-binning-report.component';
 import { PalletMappingReportComponent } from './pallet-mapping-report/pallet-mapping-report.component';
 import { LocationMappingReportComponent } from './location-mapping-report/location-mapping-report.component';
@@ -78,6 +79,7 @@ import { UserlogComponent } from './userlog/userlog.component';
     PrebinningSummaryComponent,
     PreBinningReportComponent,
     ReportTableComponent,
+    ReportToolbarComponent,
     ShortcutsComponent,
     SidenavComponent,
     TableConfigComponent,

@@ -13,6 +13,9 @@ import { ReportColumn } from '../components/report-table/report-table.component'
 export class LocationMappingReportComponent implements OnInit {
   flagset: boolean = false;
   filterForm!: FormGroup;
+  searchTerm: string = '';
+  private defaultFromDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  private defaultToDate = new Date().toISOString().split('T')[0];
 
   columns: ReportColumn[] = [
     { header: 'Location Code', data: 'locationCode', sortable: true },
@@ -37,6 +40,7 @@ export class LocationMappingReportComponent implements OnInit {
   totalPages: number = 0;
   sortBy: string = 'mappedAt';
   sortDir: string = 'DESC';
+  totals: { [key: string]: number } = {};
 
   constructor(private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private fb: FormBuilder) { }
 
@@ -48,8 +52,8 @@ export class LocationMappingReportComponent implements OnInit {
       palletId: [''],
       status: [''],
       itemCode: [''],
-      fromDate: [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]],
-      toDate: [new Date().toISOString().split('T')[0]]
+      fromDate: [this.defaultFromDate],
+      toDate: [this.defaultToDate]
     });
     this.load();
   }
@@ -58,8 +62,29 @@ export class LocationMappingReportComponent implements OnInit {
     const v = this.filterForm.value;
     return {
       warehouseCode: v.warehouseCode, rowCode: v.rowCode, locationCode: v.locationCode, palletId: v.palletId,
-      status: v.status, itemCode: v.itemCode, fromDate: v.fromDate, toDate: v.toDate
+      status: v.status, itemCode: v.itemCode, fromDate: v.fromDate, toDate: v.toDate,
+      search: this.searchTerm
     };
+  }
+
+  get activeFilterCount(): number {
+    const v = this.filterForm?.value || {};
+    let count = 0;
+    if (v.warehouseCode) count++;
+    if (v.rowCode) count++;
+    if (v.locationCode) count++;
+    if (v.palletId) count++;
+    if (v.status) count++;
+    if (v.itemCode) count++;
+    if (v.fromDate !== this.defaultFromDate) count++;
+    if (v.toDate !== this.defaultToDate) count++;
+    return count;
+  }
+
+  onSearchChange(term: string): void {
+    this.searchTerm = term;
+    this.page = 1;
+    this.load();
   }
 
   load(): void {
@@ -72,16 +97,19 @@ export class LocationMappingReportComponent implements OnInit {
         this.rows = res.data;
         this.totalRecords = res.pagination.totalRecords;
         this.totalPages = res.pagination.totalPages;
+        this.totals = res.totals || {};
       } else {
         this.rows = [];
         this.totalRecords = 0;
         this.totalPages = 0;
+        this.totals = {};
         this.swal.error('Error', res.message);
       }
     }, (err: any) => {
       this.loading = false;
       this.appComponent.hideLoading();
       this.rows = [];
+      this.totals = {};
       this.swal.error('Error', err?.error?.message || 'Failed to load the Location Mapping report.');
     });
   }
@@ -92,10 +120,11 @@ export class LocationMappingReportComponent implements OnInit {
   }
 
   clear(): void {
+    this.searchTerm = '';
     this.filterForm.reset({
       warehouseCode: '', rowCode: '', locationCode: '', palletId: '', status: '', itemCode: '',
-      fromDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      toDate: new Date().toISOString().split('T')[0]
+      fromDate: this.defaultFromDate,
+      toDate: this.defaultToDate
     });
     this.searchData();
   }
@@ -113,7 +142,8 @@ export class LocationMappingReportComponent implements OnInit {
   }
 
   export(format: string): void {
-    this.apiservice.exportReportData('locationmapping', this.buildFilters(), this.sortBy, this.sortDir, format, 'Location_Mapping_Report');
+    this.apiservice.exportReportData('locationmapping', this.buildFilters(), this.sortBy, this.sortDir, format, 'Location_Mapping_Report',
+      (err: any) => this.swal.error('Export Failed', err?.error?.message || 'Failed to export the Location Mapping report.'));
   }
 
   openSidebar(): void {

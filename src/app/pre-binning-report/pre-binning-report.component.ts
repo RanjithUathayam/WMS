@@ -13,9 +13,13 @@ import { ReportColumn } from '../components/report-table/report-table.component'
 export class PreBinningReportComponent implements OnInit {
   flagset: boolean = false;
   filterForm!: FormGroup;
+  searchTerm: string = '';
+  private defaultFromDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  private defaultToDate = new Date().toISOString().split('T')[0];
 
   columns: ReportColumn[] = [
     { header: 'GRN No', data: 'grnNo', sortable: true },
+    { header: 'Warehouse', data: 'whsCode', sortable: true },
     { header: 'GRN Type', data: 'grnType' },
     { header: 'Bin ID', data: 'binId', sortable: true },
     { header: 'Item Code', data: 'itemCode', sortable: true },
@@ -50,12 +54,13 @@ export class PreBinningReportComponent implements OnInit {
   ngOnInit(): void {
     this.filterForm = this.fb.group({
       grnNo: [''],
+      whsCode: [''],
       itemCode: [''],
       itemName: [''],
       binId: [''],
       status: [''],
-      fromDate: [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]],
-      toDate: [new Date().toISOString().split('T')[0]]
+      fromDate: [this.defaultFromDate],
+      toDate: [this.defaultToDate]
     });
     this.load();
   }
@@ -63,9 +68,30 @@ export class PreBinningReportComponent implements OnInit {
   private buildFilters(): any {
     const v = this.filterForm.value;
     return {
-      grnNo: v.grnNo, itemCode: v.itemCode, itemName: v.itemName, binId: v.binId,
-      status: v.status, fromDate: v.fromDate, toDate: v.toDate
+      grnNo: v.grnNo, whsCode: v.whsCode, itemCode: v.itemCode, itemName: v.itemName, binId: v.binId,
+      status: v.status, fromDate: v.fromDate, toDate: v.toDate,
+      search: this.searchTerm
     };
+  }
+
+  get activeFilterCount(): number {
+    const v = this.filterForm?.value || {};
+    let count = 0;
+    if (v.grnNo) count++;
+    if (v.whsCode) count++;
+    if (v.itemCode) count++;
+    if (v.itemName) count++;
+    if (v.binId) count++;
+    if (v.status) count++;
+    if (v.fromDate !== this.defaultFromDate) count++;
+    if (v.toDate !== this.defaultToDate) count++;
+    return count;
+  }
+
+  onSearchChange(term: string): void {
+    this.searchTerm = term;
+    this.page = 1;
+    this.load();
   }
 
   load(): void {
@@ -101,10 +127,11 @@ export class PreBinningReportComponent implements OnInit {
   }
 
   clear(): void {
+    this.searchTerm = '';
     this.filterForm.reset({
-      grnNo: '', itemCode: '', itemName: '', binId: '', status: '',
-      fromDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      toDate: new Date().toISOString().split('T')[0]
+      grnNo: '', whsCode: '', itemCode: '', itemName: '', binId: '', status: '',
+      fromDate: this.defaultFromDate,
+      toDate: this.defaultToDate
     });
     this.searchData();
   }
@@ -122,7 +149,8 @@ export class PreBinningReportComponent implements OnInit {
   }
 
   export(format: string): void {
-    this.apiservice.exportReportData('prebinning', this.buildFilters(), this.sortBy, this.sortDir, format, 'Pre_Binning_Report');
+    this.apiservice.exportReportData('prebinning', this.buildFilters(), this.sortBy, this.sortDir, format, 'Pre_Binning_Report',
+      (err: any) => this.swal.error('Export Failed', err?.error?.message || 'Failed to export the Pre-Binning report.'));
   }
 
   openSidebar(): void {

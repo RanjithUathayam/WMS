@@ -1,39 +1,18 @@
-.btn-group-fab .button {
-  padding: 6px 1.2rem;
-  border-radius: 20px;
-  background: #018DB0;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-
 .storage_filter {
-  font-size: 1.4rem;
-  color: #018DB0;
-  font-weight: 500;
+  font-size: 1.3rem;
+  color: var(--report-primary);
+  font-weight: 600;
 }
 
 .filter_label {
-  font-size: 1.1rem;
-  color: #018DB0;
-  font-weight: 500;
-  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+  color: var(--report-primary);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
 /* Slide-in filter panel — same rules as prebinning-summary.component.css (Angular's per-component
    CSS scoping means these have to be repeated here, they don't apply from that other component). */
-.filter_icon {
-  position: absolute;
-  top: -4.2vh;
-  display: flex;
-  left: 87%;
-  text-align: center;
-  padding: 2vh 2vw !important;
-  height: 4vh !important;
-  align-items: center;
-  cursor: pointer;
-}
-
 .sidebar {
   position: fixed;
   top: 0px;
@@ -41,23 +20,51 @@
   bottom: 0;
   height: 100%;
   width: 25%;
-  background: #e6e6e6;
+  background: var(--report-sidebar-bg);
   z-index: 100;
-  transition: all 0.5s ease;
-  border-left: 2px solid #018DB0;
-  border-bottom: 2px solid #018DB0;
+  transition: all 0.35s ease;
+  box-shadow: -4px 0 20px rgba(15, 42, 67, 0.18);
+  overflow-y: auto;
 }
 
 .sidebar.close {
   width: 0px;
+  box-shadow: none;
+}
+
+.positionset {
+  border-bottom: 1px solid var(--report-border);
+  padding-bottom: 1rem !important;
+}
+
+.positionset .form-control {
+  border-radius: var(--report-radius-sm);
+  border: 1px solid var(--report-border);
+}
+
+.positionset .form-control:focus {
+  border-color: var(--report-primary-dark);
+  box-shadow: 0 0 0 3px rgba(1, 109, 176, 0.15);
+}
+
+.positionset:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0 !important;
 }
 
 .closesidebar {
   padding: 0px !important;
   width: 40px;
   height: 40px;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.closesidebar:hover {
+  background: rgba(1, 141, 176, 0.12);
 }
 
 .closesidebar span {
   font-size: 2rem;
+  line-height: 1;
 }

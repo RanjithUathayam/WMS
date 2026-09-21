@@ -85,7 +85,10 @@ export class UserEntryLogComponent implements OnInit {
 
 
   clear() {
-
+    this.fromDate = new Date().toISOString().split('T')[0];
+    this.toDate = new Date().toISOString().split('T')[0];
+    this.selectedType = 'All';
+    this.userEntryLogData();
   }
 
   userEntryLogData() {
@@ -109,6 +112,7 @@ export class UserEntryLogComponent implements OnInit {
           // this.appComponent.hideLoading();
           this.userEntryList = res.data;
           this.tableHeader = JSON.parse(res.header);
+          this.searchApiCall = 'history/userEntryLog';
           this.userEntryList.forEach((element: any) => {
             this.typeValue.push({ id: element.Type, text: element.Type });  
           })

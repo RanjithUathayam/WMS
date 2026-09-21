@@ -865,7 +865,7 @@ export class ApiService {
         return this.http.get(url, { headers: this.option });
     }
 
-    exportReportData(apiCall: string, filters: any, sortBy: string, sortDir: string, exportFormat: string, fileNamePrefix: string) {
+    exportReportData(apiCall: string, filters: any, sortBy: string, sortDir: string, exportFormat: string, fileNamePrefix: string, onError?: (err: any) => void) {
         const queryParams = this.buildReportParams(filters, undefined, undefined, sortBy, sortDir, exportFormat);
         const url = `${this.baseURL}reports/${apiCall}?${queryParams.toString()}`;
 
@@ -882,6 +882,9 @@ export class ApiService {
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(blobUrl);
+            },
+            (err: any) => {
+                if (onError) { onError(err); }
             }
         );
     }
