@@ -21,6 +21,8 @@ import { PreBinningReportComponent } from './pre-binning-report/pre-binning-repo
 import { PalletMappingReportComponent } from './pallet-mapping-report/pallet-mapping-report.component';
 import { LocationMappingReportComponent } from './location-mapping-report/location-mapping-report.component';
 import { InventoryDetailsReportComponent } from './inventory-details-report/inventory-details-report.component';
+import { PickListComponent } from './pick-list/pick-list.component';
+import { PickListDetailComponent } from './pick-list/pick-list-detail/pick-list-detail.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -36,6 +38,8 @@ const routes: Routes = [
         { path: 'operation_binwisePrebinningReject', component: BinwisePrebininningActionComponent},
         { path: 'grn_pushing', component: GrnPushingComponent },
         { path: 'label_print', component: LabelPrintComponent },
+        { path: 'pick_list', component: PickListComponent },
+        { path: 'pick_list/:id', component: PickListDetailComponent },
         { path: 'prebinning_aaproval', component: PrebinningApprovalComponent },
         { path: 'prebinning_status', component: PrebinningStatusComponent },
         { path: 'user-control', component: UserControlComponent },

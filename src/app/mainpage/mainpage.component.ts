@@ -163,6 +163,8 @@ export class MainpageComponent implements OnInit {
       this.menuRights.report_palletMapping_list = true;
       this.menuRights.report_locationMapping_list = true;
       this.menuRights.report_inventory_list = true;
+      // Pick List screens call /api/picking/*, which the backend gates on picking_creates.
+      this.menuRights.picking_creates = true;
     }
  
     this.tagEmergency = router.url.split('/')[2];
@@ -344,6 +346,10 @@ export class MainpageComponent implements OnInit {
       this.mySelectedTab = 'Operations';
       this.selectedTab = 'label_print';
     }
+    if (this.router.url.includes('mainpage/pick_list')) {
+      this.mySelectedTab = 'Operations';
+      this.selectedTab = 'pick_list';
+    }
     if (this.router.url.includes('mainpage/orderApproval')) {
       this.mySelectedTab = 'Operations';
       this.selectedTab = 'order_approval';
@@ -451,6 +457,7 @@ export class MainpageComponent implements OnInit {
       this.selectedTab === 'prebinning_aaproval' ||
       this.selectedTab === 'grn_pushing' ||
       this.selectedTab === 'label_print' ||
+      this.selectedTab === 'pick_list' ||
       this.selectedTab === 'pallet_storage' ||
       this.selectedTab === 'storage_details' ||
       this.selectedTab === 'pallet_relocation' ||

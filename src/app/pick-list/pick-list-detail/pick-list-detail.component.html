@@ -1,0 +1,440 @@
+<section class="pl-shell">
+
+  <!-- ============================================================ Header -->
+  <div class="pl-detail-head pl-card">
+    <button type="button" class="pl-icon-btn" (click)="back()" aria-label="Back to Pick Lists">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+
+    <div class="pl-head-main" *ngIf="detail; else headLoading">
+      <div class="pl-head-title">
+        <span class="pl-label">Pick List No</span>
+        <h2>{{ detail.pickListNumber }}</h2>
+        <span class="pl-status pl-status--lg" [ngClass]="'pl-status--' + detail.status">
+          {{ pickListService.statusLabel(detail.status) }}
+        </span>
+      </div>
+      <div class="pl-head-meta">
+        <span><span class="pl-label">Source DocNum(s)</span>
+          <span class="pl-doc-chip pl-doc-chip--static" *ngFor="let doc of detail.sourceDocNums">{{ doc }}</span>
+        </span>
+        <span><span class="pl-label">Warehouse</span><b>{{ detail.fromWarehouse }}</b> → <b>{{ detail.toWarehouse }}</b></span>
+        <span><span class="pl-label">Created</span>{{ detail.createdDate | date: 'dd-MM-yyyy HH:mm' }} · {{ detail.createdBy }}</span>
+      </div>
+    </div>
+    <ng-template #headLoading>
+      <div class="pl-head-main"><h2>{{ loadError ? 'Pick List' : 'Loading…' }}</h2></div>
+    </ng-template>
+
+    <div class="pl-head-actions">
+      <button type="button" class="pl-btn pl-btn--outline" (click)="refresh()" [disabled]="isLoading">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="isLoading || isLoadingInventory"></i>Refresh
+      </button>
+      <button type="button" class="pl-btn pl-btn--success" *ngIf="detail && !isCompleted && detail.status !== 'CANCELLED'"
+        [disabled]="!canComplete" (click)="completePickList()"
+        [title]="canComplete ? 'Complete this Pick List' : 'All required quantities must be picked first'">
+        <i class="fa-solid" [ngClass]="isCompleting ? 'fa-spinner fa-spin' : (isAwaitingPosting ? 'fa-rotate-right' : 'fa-check-double')"></i>
+        {{ isAwaitingPosting ? 'Retry Completion' : 'Complete Pick List' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loadError" class="pl-alert pl-alert--error">
+    <i class="fa-solid fa-triangle-exclamation"></i>{{ loadError }}
+    <button type="button" class="pl-link-btn" (click)="refresh()">Retry</button>
+  </div>
+
+  <ng-container *ngIf="detail">
+
+    <!-- ============================================================ Completion summary -->
+    <div class="pl-card pl-summary" *ngIf="isCompleted">
+      <div class="pl-summary-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="pl-summary-body">
+        <h3>Pick List completed</h3>
+        <p class="pl-panel-copy">Picking and editing are locked. DC and SAP Stock Transfer were generated.</p>
+        <div class="pl-summary-grid">
+          <div><span class="pl-label">DC Number</span><b class="pl-code">{{ detail.dcNumber || '—' }}</b></div>
+          <div><span class="pl-label">Stock Transfer Number</span><b class="pl-code">{{ detail.stockTransferNumber || '—' }}</b></div>
+          <div><span class="pl-label">Completed</span><b>{{ detail.completedDate | date: 'dd-MM-yyyy hh:mm:ss a' }}</b>
+            <div class="pl-sub" *ngIf="detail.completedBy">by {{ detail.completedBy }}</div></div>
+          <div><span class="pl-label">Source DocNum(s)</span><b>{{ detail.sourceDocNums.join(', ') }}</b></div>
+          <div><span class="pl-label">Total Picked</span><b>{{ totals.picked | number: '1.0-3' }}</b>
+            <div class="pl-sub" *ngIf="detail.dc">DC qty {{ detail.dc.totalQty | number: '1.0-3' }}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pl-alert pl-alert--muted" *ngIf="detail.status === 'CANCELLED'">
+      <i class="fa-solid fa-ban"></i>This Pick List has been cancelled. Picking is disabled.
+    </div>
+
+    <!-- Picking done but DC / SAP not finished (a previous Complete failed part-way). -->
+    <div class="pl-alert pl-alert--warn" *ngIf="isAwaitingPosting">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>
+        Picking is complete and locked, but the Pick List is not completed yet —
+        <b>{{ detail.status === 'PICKED' ? 'DC and Stock Transfer are pending' : 'DC ' + (detail.dcNumber || '') + ' created; SAP Stock Transfer is pending' }}</b>.
+        Use <b>Retry Completion</b> to continue from the failed step.
+      </span>
+    </div>
+
+    <div class="pl-alert pl-alert--error" *ngIf="!isCompleted && (completionError || detail.lastError)">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span *ngIf="completionError; else storedError"><b>Completion failed:</b> {{ completionError.message }}</span>
+      <ng-template #storedError>
+        <span><b>Last completion attempt failed ({{ detail.lastError?.stage }}):</b> {{ detail.lastError?.message }}
+          <span class="pl-sub">· {{ detail.lastError?.date | date: 'dd-MM-yyyy HH:mm' }} · {{ detail.retryCount }} retr{{ detail.retryCount === 1 ? 'y' : 'ies' }}</span>
+        </span>
+      </ng-template>
+    </div>
+
+    <!-- ============================================================ KPIs -->
+    <div class="pl-kpis">
+      <div class="pl-kpi"><span class="pl-label">Required Qty</span><b>{{ totals.required | number: '1.0-3' }}</b></div>
+      <div class="pl-kpi pl-kpi--picked"><span class="pl-label">Picked Qty</span><b>{{ totals.picked | number: '1.0-3' }}</b></div>
+      <div class="pl-kpi pl-kpi--remaining" [class.is-zero]="totals.remaining <= 0">
+        <span class="pl-label">Remaining Qty</span><b>{{ totals.remaining | number: '1.0-3' }}</b>
+      </div>
+      <div class="pl-kpi"><span class="pl-label">Items pending</span><b>{{ totals.pendingItems }} / {{ totals.itemCount }}</b></div>
+      <div class="pl-kpi pl-kpi--wide">
+        <span class="pl-label">Progress {{ totals.progress }}%</span>
+        <div class="pl-progress pl-progress--lg"><div class="pl-progress-bar" [style.width.%]="totals.progress"></div></div>
+      </div>
+    </div>
+
+    <div class="pl-work" [class.is-readonly]="!isEditable">
+
+      <!-- ============================================================ Scan panel -->
+      <aside class="pl-card pl-scan" *ngIf="isEditable">
+        <div class="pl-side-head">
+          <h3 class="pl-panel-title"><i class="fa-solid fa-barcode"></i>Picking Scan</h3>
+          <button type="button" class="pl-link-btn" (click)="cancelScan()">Reset</button>
+        </div>
+
+        <ol class="pl-steps">
+          <li [class.is-active]="stage === 'pallet'" [class.is-done]="stage !== 'pallet'">Pallet</li>
+          <li [class.is-active]="stage === 'box'" [class.is-done]="stage === 'item' || stage === 'qty'">Box</li>
+          <li [class.is-active]="stage === 'item'" [class.is-done]="stage === 'qty'">Item</li>
+          <li [class.is-active]="stage === 'qty'">Qty</li>
+        </ol>
+
+        <form class="pl-scan-form" (ngSubmit)="savePick()" autocomplete="off">
+          <label class="pl-scan-field" [class.is-active]="stage === 'pallet'">
+            <span><i class="fa-solid fa-pallet"></i>Pallet</span>
+            <input #palletInput name="palletNumber" class="pl-scan-input" placeholder="Scan pallet number"
+              [(ngModel)]="scan.palletNumber" (keydown.enter)="$event.preventDefault(); onPalletScanned()"
+              (focus)="stage = 'pallet'" [disabled]="isSaving || isScanning">
+          </label>
+
+          <label class="pl-scan-field" [class.is-active]="stage === 'box'">
+            <span><i class="fa-solid fa-box"></i>Box</span>
+            <input #boxInput name="boxNumber" class="pl-scan-input" placeholder="Scan box number"
+              [(ngModel)]="scan.boxNumber" (keydown.enter)="$event.preventDefault(); onBoxScanned()"
+              (focus)="stage = 'box'" [disabled]="!scan.palletNumber || isSaving || isScanning">
+          </label>
+          <div class="pl-hint pl-hint--left" *ngIf="stage === 'box' && boxHints.length">
+            Boxes on this pallet with items needed: <b>{{ boxHints.join(', ') }}</b>
+          </div>
+
+          <label class="pl-scan-field" [class.is-active]="stage === 'item' || stage === 'qty'">
+            <span>
+              <i class="fa-solid fa-tag"></i>Item
+              <small class="pl-scan-tip" *ngIf="stock">Scan again to add 1</small>
+            </span>
+            <input #itemInput name="itemCode" class="pl-scan-input" placeholder="Scan item code"
+              [(ngModel)]="scan.itemCode" (keydown.enter)="$event.preventDefault(); onItemScanned()"
+              (focus)="onItemFocus()" [disabled]="!boxScan || isSaving || isScanning">
+          </label>
+          <div class="pl-hint pl-hint--left" *ngIf="stage === 'item' && itemHints.length">
+            Needed from this box:
+            <span class="pl-item-hint" *ngFor="let h of itemHints"><b>{{ h.itemCode }}</b> ({{ h.remainingRequiredQty | number: '1.0-3' }})</span>
+          </div>
+
+          <div class="pl-validating" *ngIf="isScanning"><i class="fa-solid fa-spinner fa-spin"></i>Checking inventory…</div>
+
+          <!-- Server-validated inventory -->
+          <div class="pl-validated" *ngIf="stock">
+            <div class="pl-validated-head"><i class="fa-solid fa-circle-check"></i>Inventory found</div>
+            <dl>
+              <div><dt>Item</dt><dd class="pl-code">{{ stock.itemCode }}</dd></div>
+              <div><dt>Warehouse</dt><dd>{{ stock.warehouseCode || '—' }}</dd></div>
+              <div><dt>Location</dt><dd>{{ stock.locationCode || '—' }}</dd></div>
+              <div><dt>Pallet / Box</dt><dd class="pl-code">{{ stock.palletNumber }} / {{ stock.boxNumber }}</dd></div>
+              <div><dt>Available</dt><dd class="pl-big">{{ stock.pickableQty | number: '1.0-3' }}</dd></div>
+              <div><dt>Remaining</dt><dd class="pl-big">{{ (selectedLine?.remainingQty || 0) | number: '1.0-3' }}</dd></div>
+            </dl>
+            <div class="pl-line-pick" *ngIf="openLinesForStock.length > 1; else singleLine">
+              <label for="pl-line-select" class="pl-label">Pick for source line</label>
+              <select id="pl-line-select" name="line" class="pl-input" [(ngModel)]="selectedLineId" (ngModelChange)="onLineChange()">
+                <option *ngFor="let l of openLinesForStock" [ngValue]="l.pickListDetailId">
+                  DocNum {{ l.sourceDocNum }} / Line {{ l.sourceLineNum }} — {{ l.remainingQty }} remaining
+                </option>
+              </select>
+            </div>
+            <ng-template #singleLine>
+              <div class="pl-line-pick pl-sub" *ngIf="selectedLine">
+                For DocNum <b>{{ selectedLine.sourceDocNum }}</b> / Line <b>{{ selectedLine.sourceLineNum }}</b>
+              </div>
+            </ng-template>
+          </div>
+
+          <div class="pl-scan-field" [class.is-active]="stage === 'qty'">
+            <span>
+              <i class="fa-solid fa-hashtag"></i>Pick Qty <small *ngIf="stock">(max {{ maxPickQty }})</small>
+              <button type="button" class="pl-link-btn pl-max-btn" *ngIf="stock" (click)="setMaxQty()" [disabled]="isSaving">Max</button>
+            </span>
+            <div class="pl-qty-control">
+              <button type="button" class="pl-qty-btn" (click)="changeQty(-1)" aria-label="Decrease quantity"
+                [disabled]="!stock || isSaving || (scan.pickQty || 0) <= 1"><i class="fa-solid fa-minus"></i></button>
+              <input #qtyInput name="pickQty" type="number" step="any" min="0" class="pl-scan-input pl-scan-input--qty"
+                placeholder="Qty" [(ngModel)]="scan.pickQty" (focus)="stage = 'qty'"
+                [disabled]="!stock || isSaving" [class.is-invalid]="qtyError" aria-label="Pick quantity">
+              <button type="button" class="pl-qty-btn" (click)="changeQty(1)" aria-label="Increase quantity"
+                [disabled]="!stock || isSaving || (scan.pickQty || 0) >= maxPickQty"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+          <div class="pl-field-error" *ngIf="qtyError">{{ qtyError }}</div>
+
+          <div class="pl-alert pl-alert--error pl-alert--inline" *ngIf="scanError" role="alert">
+            <i class="fa-solid fa-triangle-exclamation"></i>{{ scanError.message }}
+          </div>
+          <div class="pl-alert pl-alert--warn pl-alert--inline" *ngIf="scanNotice">
+            <i class="fa-solid fa-circle-info"></i>{{ scanNotice }}
+          </div>
+          <div class="pl-alert pl-alert--ok pl-alert--inline" *ngIf="lastPickMessage && !scanError" role="status">
+            <i class="fa-solid fa-check"></i>{{ lastPickMessage }}
+          </div>
+
+          <button type="submit" class="pl-btn pl-btn--solid pl-btn--block pl-btn--lg" [disabled]="!canSavePick">
+            <i class="fa-solid" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>Save Pick
+          </button>
+        </form>
+      </aside>
+
+      <div class="pl-work-main">
+        <!-- ============================================================ Items / stock availability -->
+        <div class="pl-card">
+          <div class="pl-toolbar">
+            <div>
+              <h3 class="pl-panel-title">Items &amp; Stock Availability</h3>
+              <p class="pl-panel-copy">Available stock comes from the server. Select an item to see Warehouse → Location → Pallet → Box.</p>
+            </div>
+          </div>
+          <div class="pl-alert pl-alert--error" *ngIf="inventoryError">
+            <i class="fa-solid fa-triangle-exclamation"></i>Stock could not be loaded: {{ inventoryError }}
+            <button type="button" class="pl-link-btn" (click)="loadInventory()">Retry</button>
+          </div>
+          <div class="pl-table-wrap">
+            <table class="pl-table">
+              <thead>
+                <tr>
+                  <th>Item Code</th>
+                  <th>Item Name</th>
+                  <th class="pl-num">Required</th>
+                  <th class="pl-num">Picked</th>
+                  <th class="pl-num">Remaining</th>
+                  <th class="pl-num">Available</th>
+                  <th>Warehouse</th>
+                  <th>Location</th>
+                  <th>Pallet</th>
+                  <th>Box</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of itemRows; trackBy: trackByItem" class="pl-line-row"
+                  [class.is-selected]="item.itemCode === selectedItemCode" (click)="selectItem(item)">
+                  <td class="pl-code pl-strong">{{ item.itemCode }}</td>
+                  <td>{{ item.itemName }}<div class="pl-sub" *ngIf="item.lines.length > 1">{{ item.lines.length }} source lines</div></td>
+                  <td class="pl-num">{{ item.requiredQty | number: '1.0-3' }}</td>
+                  <td class="pl-num">{{ item.pickedQty | number: '1.0-3' }}</td>
+                  <td class="pl-num pl-strong">{{ item.remainingQty | number: '1.0-3' }}</td>
+                  <td class="pl-num" [class.pl-danger-text]="item.shortageQty > 0">
+                    {{ isLoadingInventory && !inventory ? '…' : (item.availableQty | number: '1.0-3') }}
+                    <div class="pl-sub" *ngIf="item.shortageQty > 0">short {{ item.shortageQty | number: '1.0-3' }}</div>
+                  </td>
+                  <td>{{ item.warehouse || '—' }}</td>
+                  <td class="pl-sub pl-clip" [title]="item.locations.join(', ')">{{ item.locations.join(', ') || '—' }}</td>
+                  <td class="pl-sub pl-clip" [title]="item.pallets.join(', ')">{{ item.pallets.join(', ') || '—' }}</td>
+                  <td class="pl-sub pl-clip" [title]="item.boxes.join(', ')">{{ item.boxes.join(', ') || '—' }}</td>
+                  <td>
+                    <span class="pl-item-state" [ngClass]="'pl-item-state--' + itemState(item)">{{ itemStateLabel(item) }}</span>
+                    <div class="pl-progress pl-progress--thin"><div class="pl-progress-bar" [style.width.%]="itemProgress(item)"></div></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pl-empty" *ngIf="itemRows.length === 0 && !isLoading">
+              <i class="fa-solid fa-box-open"></i><h4>No items on this Pick List</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ Stock breakdown -->
+        <div class="pl-card" *ngIf="selectedItem as item">
+          <div class="pl-toolbar">
+            <div>
+              <h3 class="pl-panel-title">
+                <span class="pl-code">{{ item.itemCode }}</span> — Stock by Location / Pallet / Box
+              </h3>
+              <p class="pl-panel-copy">
+                {{ item.itemName }} · Required <b>{{ item.requiredQty }}</b> · Remaining <b>{{ item.remainingQty }}</b>
+                · Available in stock <b>{{ item.availableQty | number: '1.0-3' }}</b>
+              </p>
+            </div>
+            <button type="button" class="pl-btn pl-btn--outline" (click)="loadInventory()" [disabled]="isLoadingInventory">
+              <i class="fa-solid fa-rotate" [class.fa-spin]="isLoadingInventory"></i>Reload stock
+            </button>
+          </div>
+
+          <div class="pl-alert pl-alert--warn" *ngIf="!isLoadingInventory && item.shortageQty > 0">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            Insufficient stock: {{ item.availableQty | number: '1.0-3' }} available, {{ item.remainingQty }} still required
+            (short {{ item.shortageQty | number: '1.0-3' }}).
+          </div>
+
+          <div class="pl-table-wrap">
+            <table class="pl-table">
+              <thead>
+                <tr>
+                  <th>Warehouse</th>
+                  <th>Location</th>
+                  <th>Pallet</th>
+                  <th>Box</th>
+                  <th class="pl-num">Available Qty</th>
+                  <th class="pl-num">Picked here</th>
+                  <th *ngIf="isEditable"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of item.positions; trackBy: trackByPosition"
+                  [class.is-selected]="p.palletNumber === scan.palletNumber && p.boxNumber === scan.boxNumber">
+                  <td><i class="fa-solid fa-warehouse pl-muted"></i> {{ p.warehouse }}</td>
+                  <td><i class="fa-solid fa-location-dot pl-muted"></i> {{ p.location || '—' }}</td>
+                  <td class="pl-code">{{ p.palletNumber }}</td>
+                  <td class="pl-code">{{ p.boxNumber }}</td>
+                  <td class="pl-num pl-strong">{{ p.availableQty | number: '1.0-3' }}</td>
+                  <td class="pl-num">{{ pickedFromBox(item.itemCode, p.palletNumber, p.boxNumber) || '—' }}</td>
+                  <td *ngIf="isEditable" class="pl-num">
+                    <button type="button" class="pl-btn pl-btn--outline pl-btn--sm"
+                      [disabled]="item.remainingQty <= 0 || p.availableQty <= 0 || isScanning || isSaving"
+                      (click)="pickFromPosition(item, p)">
+                      <i class="fa-solid fa-hand-pointer"></i>Pick
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pl-loading" *ngIf="isLoadingInventory && !inventory"><i class="fa-solid fa-spinner fa-spin"></i>Loading stock…</div>
+            <div class="pl-empty" *ngIf="inventory && !inventoryError && item.positions.length === 0">
+              <i class="fa-solid fa-boxes-stacked"></i><h4>No stock available</h4>
+              <p>No pickable inventory for {{ item.itemCode }} was found in {{ item.warehouse }}.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ Transactions / sources / log -->
+        <div class="pl-card">
+          <div class="pl-tabs pl-tabs--inner" role="tablist">
+            <button type="button" role="tab" class="pl-tab" [class.is-active]="bottomTab === 'transactions'" (click)="bottomTab = 'transactions'">
+              <i class="fa-solid fa-clock-rotate-left"></i>Pick Transactions <span class="pl-tab-count">{{ detail.transactions.length }}</span>
+            </button>
+            <button type="button" role="tab" class="pl-tab" [class.is-active]="bottomTab === 'sources'" (click)="bottomTab = 'sources'">
+              <i class="fa-solid fa-link"></i>Source Lines <span class="pl-tab-count">{{ detail.details.length }}</span>
+            </button>
+            <button type="button" role="tab" class="pl-tab" [class.is-active]="bottomTab === 'log'" (click)="bottomTab = 'log'">
+              <i class="fa-solid fa-list-ul"></i>Process Log <span class="pl-tab-count">{{ detail.processLog.length }}</span>
+            </button>
+          </div>
+
+          <div class="pl-table-wrap" *ngIf="bottomTab === 'transactions'">
+            <table class="pl-table">
+              <thead>
+                <tr>
+                  <th>Picked At</th>
+                  <th>Item</th>
+                  <th>Warehouse</th>
+                  <th>Location</th>
+                  <th>Pallet</th>
+                  <th>Box</th>
+                  <th class="pl-num">Box Qty</th>
+                  <th class="pl-num">Picked</th>
+                  <th>Source DocNum / Line</th>
+                  <th>By</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of detail.transactions">
+                  <td>{{ t.createdDate | date: 'dd-MM-yyyy HH:mm:ss' }}</td>
+                  <td class="pl-code">{{ t.itemCode }}<div class="pl-sub">{{ itemName(t.itemCode) }}</div></td>
+                  <td>{{ t.warehouse }}</td>
+                  <td>{{ t.location || '—' }}</td>
+                  <td class="pl-code">{{ t.palletNumber }}</td>
+                  <td class="pl-code">{{ t.boxNumber }}</td>
+                  <td class="pl-num pl-sub">{{ t.availableQty | number: '1.0-3' }}</td>
+                  <td class="pl-num pl-strong">{{ t.pickQty | number: '1.0-3' }}</td>
+                  <td>{{ t.sourceDocNum }} / {{ t.sourceLineNum }}</td>
+                  <td>{{ t.createdBy }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pl-empty" *ngIf="detail.transactions.length === 0">
+              <i class="fa-solid fa-barcode"></i><h4>No picks yet</h4><p>Saved picks will appear here immediately.</p>
+            </div>
+          </div>
+
+          <div class="pl-table-wrap" *ngIf="bottomTab === 'sources'">
+            <table class="pl-table">
+              <thead>
+                <tr>
+                  <th>DocNum</th>
+                  <th>DocEntry</th>
+                  <th>LineNum</th>
+                  <th>Item Code</th>
+                  <th>Item Name</th>
+                  <th class="pl-num">Required</th>
+                  <th class="pl-num">Picked</th>
+                  <th class="pl-num">Remaining</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of detail.details">
+                  <td class="pl-strong">{{ s.sourceDocNum }}</td>
+                  <td>{{ s.sourceDocEntry }}</td>
+                  <td>{{ s.sourceLineNum }}</td>
+                  <td class="pl-code">{{ s.itemCode }}</td>
+                  <td>{{ s.itemName }}</td>
+                  <td class="pl-num">{{ s.requestedQty | number: '1.0-3' }}</td>
+                  <td class="pl-num">{{ s.pickedQty | number: '1.0-3' }}</td>
+                  <td class="pl-num pl-strong">{{ s.remainingQty | number: '1.0-3' }}</td>
+                  <td><span class="pl-item-state" [ngClass]="s.status === 'PICKED' ? 'pl-item-state--done' : s.status === 'PARTIAL' ? 'pl-item-state--partial' : 'pl-item-state--pending'">{{ s.status }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pl-table-wrap" *ngIf="bottomTab === 'log'">
+            <table class="pl-table">
+              <thead>
+                <tr><th>Time</th><th>Stage</th><th>Result</th><th>Message</th><th>By</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let l of detail.processLog">
+                  <td>{{ l.createdDate | date: 'dd-MM-yyyy HH:mm:ss' }}</td>
+                  <td class="pl-strong">{{ l.stage }}</td>
+                  <td><span class="pl-item-state" [ngClass]="l.result === 'SUCCESS' ? 'pl-item-state--done' : l.result === 'FAILED' ? 'pl-item-state--short' : 'pl-item-state--pending'">{{ l.result }}</span></td>
+                  <td>{{ l.message }}</td>
+                  <td>{{ l.createdBy }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pl-empty" *ngIf="detail.processLog.length === 0">
+              <i class="fa-solid fa-list-ul"></i><h4>No completion attempts yet</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</section>

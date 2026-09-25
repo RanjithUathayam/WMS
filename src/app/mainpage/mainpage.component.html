@@ -120,7 +120,7 @@
         </div>
       </div>
 
-      <div class="sidebar-group" *ngIf="menuRights.operation_module">
+      <div class="sidebar-group" *ngIf="menuRights.operation_module || menuRights.picking_creates">
         <button class="sidebar-toggle sidebar-toggle--primary"
           type="button"
           (click)="changeTab('Operations'); closeAllMenus()"
@@ -143,6 +143,9 @@
           </button>
           <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('label_print'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'label_print' }">
             <i class="fa fa-qrcode mr-2"></i>Label Print
+          </button>
+          <button class="sidebar-link sidebar-link--teal" type="button" *ngIf="menuRights.picking_creates" (click)="selectTab('pick_list'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'pick_list' }">
+            <i class="fa-solid fa-list-check mr-2"></i>Pick List
           </button>
         </div>
       </div>

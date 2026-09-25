@@ -1,0 +1,341 @@
+<section class="pl-shell">
+
+  <div class="pl-hero">
+    <div>
+      <p class="pl-eyebrow">Operations</p>
+      <h2>Pick List</h2>
+      <p class="pl-hero-copy">
+        Select open Stock Transfer Requests
+        <ng-container *ngIf="fromWarehouse">({{ fromWarehouse }} → {{ toWarehouse }})</ng-container>
+        and generate a combined Pick List.
+      </p>
+    </div>
+    <button type="button" class="pl-ghost-btn" (click)="refresh()">
+      <i class="fa-solid fa-rotate"></i>Refresh
+    </button>
+  </div>
+
+  <div class="pl-tabs" role="tablist">
+    <button type="button" role="tab" class="pl-tab" [class.is-active]="activeTab === 'requests'" (click)="setTab('requests')">
+      <i class="fa-solid fa-file-import"></i>Stock Transfer Requests
+      <span class="pl-tab-count" *ngIf="documents.length">{{ eligibleDocCount }}</span>
+    </button>
+    <button type="button" role="tab" class="pl-tab" [class.is-active]="activeTab === 'picklists'" (click)="setTab('picklists')">
+      <i class="fa-solid fa-list-check"></i>Pick Lists
+    </button>
+  </div>
+
+  <!-- ============================================================ Requests -->
+  <div class="pl-flow" *ngIf="activeTab === 'requests'">
+
+    <!-- ---------------------------------------------------------- Step 1 -->
+    <div class="pl-card pl-step">
+      <div class="pl-step-head">
+        <span class="pl-step-no">1</span>
+        <div class="pl-step-title">
+          <h3 class="pl-panel-title">Select Stock Transfer Requests</h3>
+          <p class="pl-panel-copy">Tick the documents to pick. Each open line is picked for its quantity not already on another Pick List.</p>
+        </div>
+        <div class="pl-step-stats">
+          <span class="pl-chip"><i class="fa-solid fa-file-lines"></i>{{ groups.length }} Documents</span>
+          <span class="pl-chip pl-chip--ok"><i class="fa-solid fa-circle-check"></i>{{ eligibleDocCount }} Available</span>
+          <span class="pl-chip" title="Last updated"><i class="fa-regular fa-clock"></i>{{ lastUpdated | date: 'dd-MM-yyyy hh:mm a' }}</span>
+        </div>
+      </div>
+
+      <div class="pl-step-toolbar">
+        <div class="pl-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="search" class="pl-input" placeholder="Search DocNum, item code or item name" [(ngModel)]="searchText" (input)="applySearch()">
+        </div>
+        <label class="pl-switch">
+          <input type="checkbox" [(ngModel)]="onlyAvailable" (change)="loadRequests()">
+          <span class="pl-switch-track"></span>Only available
+        </label>
+        <div class="pl-toolbar-actions">
+          <button type="button" class="pl-btn pl-btn--outline pl-btn--sm" (click)="toggleSelectAll()" [disabled]="visibleEligible.length === 0">
+            <i class="fa-regular" [ngClass]="allVisibleSelected ? 'fa-square-minus' : 'fa-square-check'"></i>
+            {{ allVisibleSelected ? 'Unselect all' : 'Select all' }}
+          </button>
+          <button type="button" class="pl-btn pl-btn--outline pl-btn--sm" (click)="toggleExpandAll()" [disabled]="groups.length === 0">
+            <i class="fa-solid" [ngClass]="allExpanded ? 'fa-angles-up' : 'fa-angles-down'"></i>
+            {{ allExpanded ? 'Collapse all' : 'Expand all' }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="requestsError" class="pl-alert pl-alert--error">
+        <i class="fa-solid fa-triangle-exclamation"></i>{{ requestsError }}
+        <button type="button" class="pl-link-btn" (click)="loadRequests()">Retry</button>
+      </div>
+
+      <div class="pl-doc-list" [class.is-loading]="isLoadingRequests">
+        <article *ngFor="let group of groups; trackBy: trackByDoc" class="pl-doc"
+          [class.is-selected]="isSelected(group)" [class.is-disabled]="!isEligible(group)" [class.is-open]="isExpanded(group)">
+
+          <div class="pl-doc-head" (click)="toggleDoc(group)">
+            <input type="checkbox" class="pl-doc-check" [checked]="isSelected(group)" [disabled]="!isEligible(group)"
+              (click)="$event.stopPropagation()" (change)="toggleDoc(group)"
+              [attr.aria-label]="'Select document ' + group.docNum">
+
+            <div class="pl-doc-id">
+              <span class="pl-docnum">DocNum {{ group.docNum }}</span>
+              <span class="pl-meta">Entry {{ group.docEntry }}</span>
+            </div>
+
+            <div class="pl-doc-info">
+              <span class="pl-meta"><i class="fa-regular fa-calendar"></i>{{ group.docDate | date: 'dd-MM-yyyy' }}</span>
+              <span class="pl-meta"><i class="fa-regular fa-calendar-check"></i>Due {{ group.docDueDate | date: 'dd-MM-yyyy' }}</span>
+              <span class="pl-route" [title]="group.fromWarehouseName + ' → ' + group.toWarehouseName">
+                <i class="fa-solid fa-warehouse"></i>{{ group.fromWarehouse }}
+                <i class="fa-solid fa-arrow-right-long"></i>{{ group.toWarehouse }}
+              </span>
+            </div>
+
+            <div class="pl-doc-figures">
+              <div class="pl-figure">
+                <span class="pl-figure-value">{{ group.lineCount }}</span>
+                <span class="pl-figure-label">Lines</span>
+              </div>
+              <div class="pl-figure pl-figure--accent">
+                <span class="pl-figure-value">{{ group.availableForPickListQty | number: '1.0-3' }}</span>
+                <span class="pl-figure-label">Available qty</span>
+              </div>
+            </div>
+
+            <button type="button" class="pl-expand-btn" [class.is-open]="isExpanded(group)"
+              (click)="$event.stopPropagation(); toggleExpand(group)"
+              [attr.aria-expanded]="isExpanded(group)"
+              [attr.aria-label]="(isExpanded(group) ? 'Hide lines of document ' : 'Show lines of document ') + group.docNum">
+              {{ isExpanded(group) ? 'Hide lines' : 'View lines' }}
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+          </div>
+
+          <div class="pl-doc-body" *ngIf="isExpanded(group)">
+            <div class="pl-table-wrap">
+              <table class="pl-table pl-table--compact">
+                <thead>
+                  <tr>
+                    <th>Line</th>
+                    <th>Item Code</th>
+                    <th>Item Name</th>
+                    <th class="pl-num">Requested</th>
+                    <th class="pl-num">Open</th>
+                    <th class="pl-num">Already Picked</th>
+                    <th class="pl-num">Remaining</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let line of group.lines" [class.is-disabled]="line.availableForPickListQty <= 0">
+                    <td>{{ line.lineNum }}</td>
+                    <td class="pl-code">{{ line.itemCode }}</td>
+                    <td>{{ line.itemName }}</td>
+                    <td class="pl-num">{{ line.requestedQty | number: '1.0-3' }}</td>
+                    <td class="pl-num">{{ line.openQty | number: '1.0-3' }}</td>
+                    <td class="pl-num">{{ line.reservedQty | number: '1.0-3' }}</td>
+                    <td class="pl-num pl-strong">{{ line.availableForPickListQty | number: '1.0-3' }}</td>
+                    <td>
+                      <span class="pl-badge" [ngClass]="line.availableForPickListQty > 0 ? 'pl-badge--open' : 'pl-badge--closed'">
+                        {{ line.availableForPickListQty > 0 ? 'Open' : 'On Pick List' }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+
+        <div *ngIf="!isLoadingRequests && groups.length === 0 && !requestsError" class="pl-empty">
+          <i class="fa-solid fa-inbox"></i>
+          <h4>{{ searchText ? 'No matching documents' : 'No open Stock Transfer Requests' }}</h4>
+          <p *ngIf="searchText">Nothing matches “{{ searchText }}”. <button type="button" class="pl-link-btn" (click)="searchText = ''; applySearch()">Clear search</button></p>
+          <p *ngIf="!searchText">No open lines were found<ng-container *ngIf="fromWarehouse"> for {{ fromWarehouse }} → {{ toWarehouse }}</ng-container>.</p>
+        </div>
+        <div *ngIf="isLoadingRequests" class="pl-loading"><i class="fa-solid fa-spinner fa-spin"></i>Loading requests…</div>
+      </div>
+    </div>
+
+    <!-- ---------------------------------------------------------- Step 2 -->
+    <div class="pl-card pl-step" #reviewCard [class.is-waiting]="selection.size === 0">
+      <div class="pl-step-head">
+        <span class="pl-step-no">2</span>
+        <div class="pl-step-title">
+          <h3 class="pl-panel-title">Review &amp; Create Pick List</h3>
+          <p class="pl-panel-copy">Check the combined items from the selected documents, then generate the Pick List.</p>
+        </div>
+        <button type="button" class="pl-btn pl-btn--outline pl-btn--sm" *ngIf="selection.size" (click)="clearSelection()">
+          <i class="fa-solid fa-xmark"></i>Clear selection
+        </button>
+      </div>
+
+      <ng-container *ngIf="selection.size; else nothingSelected">
+        <div class="pl-summary">
+          <div class="pl-summary-tile">
+            <span class="pl-summary-value">{{ selectedDocs.length }}</span>
+            <span class="pl-summary-label">Documents</span>
+          </div>
+          <div class="pl-summary-tile">
+            <span class="pl-summary-value">{{ selectedLineCount }}</span>
+            <span class="pl-summary-label">Lines</span>
+          </div>
+          <div class="pl-summary-tile">
+            <span class="pl-summary-value">{{ combinedItems.length }}</span>
+            <span class="pl-summary-label">Items</span>
+          </div>
+          <div class="pl-summary-tile pl-summary-tile--accent">
+            <span class="pl-summary-value">{{ combinedTotalQty | number: '1.0-3' }}</span>
+            <span class="pl-summary-label">Total qty</span>
+          </div>
+        </div>
+
+        <div class="pl-review-section">
+          <p class="pl-label">Selected DocNum(s)</p>
+          <div class="pl-doc-chips">
+            <span class="pl-doc-chip" *ngFor="let doc of selectedDocs">
+              {{ doc.docNum }}
+              <button type="button" (click)="removeDoc(doc.docEntry)" [attr.aria-label]="'Remove ' + doc.docNum"><i class="fa-solid fa-xmark"></i></button>
+            </span>
+          </div>
+        </div>
+
+        <div class="pl-review-section">
+          <div class="pl-review-bar">
+            <p class="pl-label">Combined items ({{ combinedItems.length }})</p>
+            <div class="pl-search pl-search--sm">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="search" class="pl-input" placeholder="Filter items" [(ngModel)]="combinedSearch">
+            </div>
+          </div>
+          <div class="pl-table-wrap pl-review-table">
+            <table class="pl-table pl-table--compact">
+              <thead>
+                <tr><th>#</th><th>Item Code</th><th>Item Name</th><th>From DocNum</th><th class="pl-num">Qty</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of filteredCombinedItems; let i = index">
+                  <td class="pl-sub">{{ i + 1 }}</td>
+                  <td class="pl-code">{{ item.itemCode }}</td>
+                  <td>{{ item.itemName }}</td>
+                  <td class="pl-sub">{{ item.docNums.join(', ') }}</td>
+                  <td class="pl-num pl-strong">{{ item.totalQty | number: '1.0-3' }}</td>
+                </tr>
+                <tr *ngIf="filteredCombinedItems.length === 0">
+                  <td colspan="5" class="pl-muted pl-center">No items match “{{ combinedSearch }}”.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #nothingSelected>
+        <div class="pl-empty">
+          <i class="fa-regular fa-hand-pointer"></i>
+          <h4>No documents selected yet</h4>
+          <p>Tick one or more documents in Step 1 to preview the Pick List here.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- ---------------------------------------------------------- Action bar -->
+    <div class="pl-action-bar" [class.is-active]="selection.size > 0">
+      <div class="pl-action-info">
+        <ng-container *ngIf="selection.size; else pickPrompt">
+          <i class="fa-solid fa-cart-flatbed"></i>
+          <span><b>{{ selection.size }}</b> document(s) · <b>{{ combinedItems.length }}</b> item(s) · qty <b>{{ combinedTotalQty | number: '1.0-3' }}</b></span>
+        </ng-container>
+        <ng-template #pickPrompt>
+          <i class="fa-regular fa-circle-question"></i><span>Select documents to create a Pick List.</span>
+        </ng-template>
+      </div>
+      <div class="pl-action-buttons">
+        <button type="button" class="pl-btn pl-btn--outline" *ngIf="selection.size"
+          (click)="reviewCard.scrollIntoView({ behavior: 'smooth', block: 'start' })">
+          <i class="fa-solid fa-list"></i>Review items
+        </button>
+        <button type="button" class="pl-btn pl-btn--solid"
+          [disabled]="selection.size === 0 || isGenerating"
+          (click)="generatePickList()">
+          <i class="fa-solid" [ngClass]="isGenerating ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'"></i>
+          Generate Pick List
+        </button>
+      </div>
+      <p class="pl-action-hint">SAP and existing Pick Lists are re-checked when generating, so quantities may differ slightly from this preview.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ Pick lists -->
+  <div class="pl-card" *ngIf="activeTab === 'picklists'">
+    <div class="pl-toolbar">
+      <div>
+        <h3 class="pl-panel-title">Pick Lists</h3>
+        <p class="pl-panel-copy">Open a Pick List to view stock, scan and pick, or review a completed one.</p>
+      </div>
+      <div class="pl-filters">
+        <input type="search" class="pl-input" placeholder="Search Pick List / DocNum" [(ngModel)]="pickListSearch">
+        <select class="pl-input" [(ngModel)]="statusFilter" (change)="loadPickLists()">
+          <option *ngFor="let s of statusOptions" [ngValue]="s.value">{{ s.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div *ngIf="pickListsError" class="pl-alert pl-alert--error">
+      <i class="fa-solid fa-triangle-exclamation"></i>{{ pickListsError }}
+      <button type="button" class="pl-link-btn" (click)="loadPickLists()">Retry</button>
+    </div>
+
+    <div class="pl-table-wrap" [class.is-loading]="isLoadingPickLists">
+      <table class="pl-table">
+        <thead>
+          <tr>
+            <th>Pick List No</th>
+            <th>Status</th>
+            <th>Source DocNum(s)</th>
+            <th>Warehouse</th>
+            <th class="pl-num">Lines</th>
+            <th class="pl-num">Required</th>
+            <th class="pl-num">Picked</th>
+            <th>Progress</th>
+            <th>DC / Stock Transfer</th>
+            <th>Created</th>
+            <th>Completed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of filteredPickLists" class="pl-line-row" (click)="openPickList(p.pickListId)">
+            <td class="pl-code pl-strong">{{ p.pickListNumber }}</td>
+            <td>
+              <span class="pl-status" [ngClass]="'pl-status--' + p.status">{{ pickListService.statusLabel(p.status) }}</span>
+              <div class="pl-sub pl-danger-text" *ngIf="p.lastError && p.status !== 'COMPLETED'" [title]="p.lastError.message">
+                <i class="fa-solid fa-triangle-exclamation"></i> {{ p.lastError.stage }} failed
+              </div>
+            </td>
+            <td>{{ p.sourceDocNums.join(', ') }}</td>
+            <td>{{ p.fromWarehouse }} → {{ p.toWarehouse }}</td>
+            <td class="pl-num">{{ p.lineCount }}</td>
+            <td class="pl-num">{{ p.totalRequestedQty | number: '1.0-3' }}</td>
+            <td class="pl-num">{{ p.totalPickedQty | number: '1.0-3' }}</td>
+            <td>
+              <div class="pl-progress" [attr.aria-label]="progress(p) + '% picked'">
+                <div class="pl-progress-bar" [style.width.%]="progress(p)"></div>
+              </div>
+              <span class="pl-sub">{{ progress(p) }}%</span>
+            </td>
+            <td class="pl-sub">{{ p.dcNumber || '—' }}<br>{{ p.stockTransferNumber || '—' }}</td>
+            <td>{{ p.createdDate | date: 'dd-MM-yyyy HH:mm' }}<div class="pl-sub">{{ p.createdBy }}</div></td>
+            <td>{{ p.completedDate ? (p.completedDate | date: 'dd-MM-yyyy HH:mm') : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="!isLoadingPickLists && filteredPickLists.length === 0 && !pickListsError" class="pl-empty">
+        <i class="fa-solid fa-clipboard-list"></i>
+        <h4>No Pick Lists</h4>
+        <p>Generate one from the Stock Transfer Requests tab.</p>
+      </div>
+      <div *ngIf="isLoadingPickLists" class="pl-loading"><i class="fa-solid fa-spinner fa-spin"></i>Loading pick lists…</div>
+    </div>
+  </div>
+</section>

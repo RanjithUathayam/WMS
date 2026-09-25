@@ -60,6 +60,7 @@ export class AppComponent {
       '/mainpage/prebinning_status': 'Prebinning Status',   
       '/mainpage/grn_pushing': 'GRN Pushing',
       '/mainpage/label_print': 'Label Print',
+      '/mainpage/pick_list': 'Pick List',
       '/mainpage/item': 'Item Master',
       '/mainpage/itemtransaction_list': 'Item Transaction ',
       '/mainpage/inventory_list/Inventory': 'Inventory List',

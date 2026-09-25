@@ -23,6 +23,8 @@ import { ChangePasswordComponent } from './change-password/change-password.compo
 import { DynamicTableComponent } from './components/dynamic-table/dynamic-table.component';
 import { ExportModalComponent } from './components/export-modal/export-modal.component';
 import { PopupComponent } from './components/popup/popup.component';
+import { PickListComponent } from './pick-list/pick-list.component';
+import { PickListDetailComponent } from './pick-list/pick-list-detail/pick-list-detail.component';
 import { GrnPushingComponent } from './grn-pushing/grn-pushing.component';
 import { HeaderComponent } from './header/header.component';
 import { LabelPrintComponent } from './label-print/label-print.component';
@@ -73,6 +75,8 @@ import { UserlogComponent } from './userlog/userlog.component';
     MainpageComponent,
     NavComponent,
     PalletMappingReportComponent,
+    PickListComponent,
+    PickListDetailComponent,
     PopupComponent,
     PrebinningApprovalComponent,
     PrebinningStatusComponent,
