@@ -81,7 +81,7 @@
           </thead>
           <tbody>
             <tr
-              *ngFor="let item of filteredData | paginate: { itemsPerPage: itemsPerPage, currentPage: p }"
+              *ngFor="let item of filteredData | paginate: { id: 'grnList', itemsPerPage: itemsPerPage, currentPage: p }"
               [class.row-selected]="item.selected"
               (click)="onRowSelect(item)">
               <td class="col-check-cell">
@@ -118,7 +118,7 @@
           <i class="fa fa-clock-o mr-1"></i>{{ lastUpdatedDateTime | date: 'dd-MM-yyyy hh:mm:ss a' }}
         </span>
       </div>
-      <pagination-controls class="p-0" [maxSize]="5" (pageChange)="p = $event"></pagination-controls>
+      <pagination-controls id="grnList" class="p-0" [maxSize]="5" (pageChange)="p = $event"></pagination-controls>
     </div>
 
   </div>
@@ -175,7 +175,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of filteredDetailData | paginate: { itemsPerPage: detailItemsPerPage, currentPage: detailPage }" [class.row-selected]="item.selected">
+              <tr *ngFor="let item of filteredDetailData | paginate: { id: 'grnDetail', itemsPerPage: detailItemsPerPage, currentPage: detailPage }" [class.row-selected]="item.selected">
                 <td class="col-check-cell">
                   <input type="checkbox" [checked]="item.selected" (change)="toggleDetailSelection(item)">
                 </td>
@@ -211,7 +211,7 @@
           <i class="fa fa-check-square-o mr-1"></i>Total Binned: {{ getDetailColumnTotal(['Binned', 'binnedQty', 'BinnedQty']) }}
         </span>
       </div>
-      <pagination-controls class="p-0" [maxSize]="5" (pageChange)="detailPage = $event"></pagination-controls>
+      <pagination-controls id="grnDetail" class="p-0" [maxSize]="5" (pageChange)="detailPage = $event"></pagination-controls>
       <button class="grn-btn grn-btn--outline" (click)="closeOrderDetails()">
         <i class="fa fa-times mr-1"></i>Close
       </button>

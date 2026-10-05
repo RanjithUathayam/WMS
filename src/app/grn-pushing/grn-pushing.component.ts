@@ -238,6 +238,7 @@ export class GrnPushingComponent implements OnInit {
           }));
           this.filteredDetailData = [...this.detailData];
           this.detailFilters = {};
+          this.detailPage = 1;
           this.showDetailModal = true;
           return;
         }
