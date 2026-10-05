@@ -22,10 +22,14 @@
         <p class="panel-copy">Search by Doc Entry, Doc Num, or Type. Select a row to enable actions.</p>
       </div>
       <div class="action-group">
+        <select class="grn-btn grn-btn--outline unit-select" [(ngModel)]="selectedUnit" aria-label="GRN Unit">
+          <option value="" disabled>Select Unit</option>
+          <option *ngFor="let unit of units" [value]="unit">{{ unit }}</option>
+        </select>
         <button class="grn-btn grn-btn--outline" (click)="openOrderDetails()" [disabled]="!selectedRow">
           <i class="fa fa-file-text-o mr-1"></i>Order Details
         </button>
-        <button class="grn-btn grn-btn--solid" (click)="submitRequest()" [disabled]="!selectedRow">
+        <button class="grn-btn grn-btn--solid" (click)="submitRequest()" [disabled]="!selectedRow || !selectedUnit">
           <i class="fa fa-upload mr-1"></i>Push Request
         </button>
       </div>

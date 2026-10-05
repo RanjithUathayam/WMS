@@ -140,6 +140,11 @@
   border-color: #94a3b8;
 }
 
+.unit-select {
+  min-width: 140px;
+  appearance: auto;
+}
+
 .grn-btn--solid {
   background: linear-gradient(135deg, #016DB0 0%, #023e6b 100%);
   color: #ffffff;

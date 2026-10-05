@@ -47,6 +47,8 @@ export class GrnPushingComponent implements OnInit {
   filteredDetailData: any[] = [];
 
   selectedRow: any = null;
+  readonly units = ['ATTM', 'Thindal'];
+  selectedUnit = '';
   showDetailModal = false;
   isLoading = false;
   isDetailLoading = false;
@@ -283,16 +285,26 @@ export class GrnPushingComponent implements OnInit {
       return;
     }
 
+    if (!this.selectedUnit) {
+      Swal.fire({
+        title: 'Warning',
+        text: 'Please select the unit (ATTM or Thindal).',
+        icon: 'info'
+      });
+      return;
+    }
+
     const requestBody = {
       type: 'Binning',
       docEntry: this.selectedRow.DocEntry || this.selectedRow.docEntry,
       docNum: this.selectedRow.DocNum || this.selectedRow.docNum,
-      process: this.selectedRow.Type || this.selectedRow.type || this.selectedRow.DocType || this.selectedRow.docType || 'GRPO'
+      process: this.selectedRow.Type || this.selectedRow.type || this.selectedRow.DocType || this.selectedRow.docType || 'GRPO',
+      unit: this.selectedUnit
     };
 
     Swal.fire({
       title: 'Push selected GRN?',
-      text: 'This will create the GRN pushing request for the selected document.',
+      text: `This will create the GRN pushing request for the selected document in ${this.selectedUnit} unit.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#0f766e',
