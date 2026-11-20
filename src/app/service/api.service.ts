@@ -837,6 +837,11 @@ export class ApiService {
         return this.http.post(this.baseURL + 'label/print', data, { headers: this.option });
     }
 
+    // Manual label values typed by the user — not reserved, not tracked; returns the printer command only.
+    printManualLabels(data: any) {
+        return this.http.post(this.baseURL + 'label/print/manual', data, { headers: this.option });
+    }
+
     confirmPrintLabels(data: any) {
         return this.http.post(this.baseURL + 'label/print/confirm', data, { headers: this.option });
     }

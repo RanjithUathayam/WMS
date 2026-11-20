@@ -1,0 +1,151 @@
+<section class="lp-shell">
+
+  <!-- Hero Banner -->
+  <div class="lp-hero">
+    <div class="hero-content">
+      <p class="eyebrow">Operations</p>
+      <h2>Rack Label Print</h2>
+      <p class="hero-copy">Choose racks, set the label stock, preview each sheet and print QR rack location labels.</p>
+    </div>
+  </div>
+
+  <div class="lp-grid">
+
+    <!-- ===================== Printer & Label Stock ===================== -->
+    <div class="lp-card">
+      <div class="card-head">
+        <h3 class="panel-title"><i class="fa fa-cog mr-2"></i>Printer &amp; Label Size</h3>
+      </div>
+      <div class="card-body">
+
+        <div class="field-row">
+          <label>Printer</label>
+          <div class="field-with-btn">
+            <select class="printer-select" [(ngModel)]="selectedPrinter" (ngModelChange)="onPrinterChange()">
+              <option [ngValue]="null">&mdash; Select printer &mdash;</option>
+              <option *ngFor="let p of availablePrinters" [value]="p.name">
+                {{ p.name }}{{ p.isDefault ? ' (default)' : '' }}
+              </option>
+            </select>
+            <button class="lp-btn lp-btn--outline" (click)="loadPrinters(true)" [disabled]="isDetectingPrinters">
+              <i class="fa mr-1" [class.fa-spinner]="isDetectingPrinters" [class.fa-spin]="isDetectingPrinters" [class.fa-search]="!isDetectingPrinters"></i>
+              {{ isDetectingPrinters ? 'Detecting...' : 'Detect' }}
+            </button>
+          </div>
+          <span class="field-hint field-hint--error" *ngIf="printerDetectionError">{{ printerDetectionError }}</span>
+          <span class="field-hint" *ngIf="!printerDetectionError && availablePrinters.length > 0">{{ availablePrinters.length }} printer(s) available</span>
+        </div>
+
+        <div class="field-grid">
+          <div class="field-row">
+            <label>Width (MM)</label>
+            <input type="number" min="20" step="1" [(ngModel)]="pageWidthMm" (ngModelChange)="onStockChange()">
+          </div>
+          <div class="field-row">
+            <label>Height (MM)</label>
+            <input type="number" min="20" step="1" [(ngModel)]="pageHeightMm" (ngModelChange)="onStockChange()">
+          </div>
+          <div class="field-row">
+            <label>Labels per Sheet</label>
+            <input type="number" min="1" [max]="maxLabelsPerPage" step="1" [(ngModel)]="labelsPerPage" (ngModelChange)="onStockChange()">
+          </div>
+        </div>
+        <span class="field-hint">Each rack label is {{ pageWidthMm }} &times; {{ labelHeightMm }} mm ({{ labelsPerPage }} stacked per {{ pageWidthMm }} &times; {{ pageHeightMm }} mm sheet).</span>
+      </div>
+    </div>
+
+    <!-- ===================== Sheet Preview ===================== -->
+    <div class="lp-card">
+      <div class="card-head">
+        <h3 class="panel-title"><i class="fa fa-tag mr-2"></i>Sheet Preview</h3>
+        <span class="preview-note" *ngIf="!codes.length">Sample &mdash; no racks selected</span>
+        <div class="pager" *ngIf="codes.length">
+          <button class="lp-btn lp-btn--outline pager-btn" (click)="prevPage()" [disabled]="previewPageIndex === 0">
+            <i class="fa fa-chevron-left"></i>
+          </button>
+          <span class="pager-text">Sheet {{ previewPageIndex + 1 }} / {{ pageCount }}</span>
+          <button class="lp-btn lp-btn--outline pager-btn" (click)="nextPage()" [disabled]="previewPageIndex >= pageCount - 1">
+            <i class="fa fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body preview-body">
+        <div class="label-stage">
+          <img *ngIf="previewDataUrl" class="sheet-preview" [src]="previewDataUrl" alt="Rack label sheet preview">
+          <p class="stage-caption">{{ pageWidthMm }}mm &times; {{ pageHeightMm }}mm sheet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== Rack Selection ===================== -->
+    <div class="lp-card lp-card--wide">
+      <div class="card-head">
+        <h3 class="panel-title"><i class="fa fa-th mr-2"></i>Rack Selection</h3>
+        <button class="lp-btn lp-btn--outline" (click)="clearSelection()">
+          <i class="fa fa-eraser mr-1"></i>Clear
+        </button>
+      </div>
+      <div class="card-body">
+
+        <div class="rack-group" *ngFor="let group of rackGroups">
+          <div class="rack-group-head">
+            <span class="rack-group-title">{{ group.prefix }} Racks <span class="rack-group-total">{{ groupTotal(group) }} labels</span></span>
+            <button class="lp-btn lp-btn--outline pager-btn" (click)="toggleGroup(group)">
+              {{ isGroupFullySelected(group) ? 'Unselect All' : 'Select All' }}
+            </button>
+          </div>
+          <div class="rack-chips">
+            <label class="rack-chip" *ngFor="let r of group.rows" [class.is-selected]="selectedRows[rowKey(group, r)]">
+              <input type="checkbox" [(ngModel)]="selectedRows[rowKey(group, r)]" (ngModelChange)="rebuildCodes()">
+              <span class="rack-chip-code">{{ group.prefix }}-{{ r.row }}01 &ndash; {{ group.prefix }}-{{ r.row }}{{ r.count }}</span>
+              <span class="rack-chip-count">{{ r.count }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field-row">
+            <label>From Position</label>
+            <input type="number" min="1" placeholder="1" [(ngModel)]="rangeFrom" (ngModelChange)="rebuildCodes()">
+          </div>
+          <div class="field-row">
+            <label>To Position</label>
+            <input type="number" min="1" placeholder="Last" [(ngModel)]="rangeTo" (ngModelChange)="rebuildCodes()">
+          </div>
+          <div class="field-row">
+            <label>Copies (per Label)</label>
+            <input type="number" min="1" [max]="maxCopies" [(ngModel)]="copies" (ngModelChange)="onCopiesChange()">
+          </div>
+        </div>
+        <span class="field-hint">From/To limits every selected row, e.g. 1&ndash;10 prints A01&ndash;A10, B01&ndash;B10&hellip; Leave empty for the full row.</span>
+
+        <div class="field-row custom-codes">
+          <label>Custom / Reprint Codes</label>
+          <textarea rows="2" placeholder="e.g. THDW-B45, ATTM-C07 (comma or one per line)"
+            [(ngModel)]="customCodesText" (ngModelChange)="rebuildCodes()"></textarea>
+        </div>
+
+        <div class="summary-row">
+          <span class="stat-chip"><i class="fa fa-tags mr-1"></i>Rack Labels: <strong>{{ uniqueLabelCount }}</strong></span>
+          <span class="stat-chip"><i class="fa fa-copy mr-1"></i>Copies per Label: <strong>{{ copies }}</strong></span>
+          <span class="stat-chip stat-chip--accent"><i class="fa fa-print mr-1"></i>Sheets to Print: <strong>{{ pageCount }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== Actions ===================== -->
+    <div class="lp-card lp-card--wide">
+      <div class="card-body action-bar">
+        <button class="lp-btn lp-btn--outline" (click)="browserPrint()" [disabled]="isPrinting || !codes.length">
+          <i class="fa fa-window-maximize mr-1"></i>Browser Print
+        </button>
+        <div class="action-bar-right">
+          <button class="lp-btn lp-btn--solid" (click)="print()" [disabled]="isPrinting || !codes.length">
+            <i class="fa fa-print mr-1"></i>Print
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

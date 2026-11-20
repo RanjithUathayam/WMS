@@ -1,0 +1,122 @@
+/* Shared look comes from ../label-print/label-print.component.css — only rack-specific bits here. */
+
+/* ===== Sheet preview ===== */
+.sheet-preview {
+  width: 100%;
+  max-width: 380px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pager-btn {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+}
+
+.pager-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+}
+
+/* ===== Rack row chips ===== */
+.rack-group {
+  margin-bottom: 18px;
+}
+
+.rack-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rack-group-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.rack-group-total {
+  margin-left: 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.rack-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rack-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid #dce8f2;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #334155;
+  margin: 0;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.rack-chip:hover {
+  border-color: #94a3b8;
+}
+
+.rack-chip.is-selected {
+  border-color: #016DB0;
+  background: #eaf4fb;
+}
+
+.rack-chip input {
+  accent-color: #016DB0;
+}
+
+.rack-chip-code {
+  font-weight: 700;
+}
+
+.rack-chip-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #edf2f7;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* ===== Custom codes ===== */
+.custom-codes {
+  margin-top: 14px;
+}
+
+.custom-codes textarea {
+  width: 100%;
+  border: 1px solid #dce8f2;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.86rem;
+  color: #1e293b;
+  outline: none;
+  resize: vertical;
+}
+
+.custom-codes textarea:focus {
+  border-color: #016DB0;
+  box-shadow: 0 0 0 3px rgba(1, 109, 176, 0.12);
+}

@@ -28,6 +28,7 @@ import { PickListDetailComponent } from './pick-list/pick-list-detail/pick-list-
 import { GrnPushingComponent } from './grn-pushing/grn-pushing.component';
 import { HeaderComponent } from './header/header.component';
 import { LabelPrintComponent } from './label-print/label-print.component';
+import { RackLabelPrintComponent } from './rack-label-print/rack-label-print.component';
 import { HhtDeviceRightsComponent } from './hht-device-rights/hht-device-rights.component';
 import { HomeComponent } from './home/home.component';
 import { InventoryListComponent } from './inventory-list/inventory-list.component';
@@ -69,6 +70,7 @@ import { UserlogComponent } from './userlog/userlog.component';
     InventoryListComponent,
     ItemComponent,
     LabelPrintComponent,
+    RackLabelPrintComponent,
     LocationMappingReportComponent,
     LocationMasterComponent,
     LoginComponent,

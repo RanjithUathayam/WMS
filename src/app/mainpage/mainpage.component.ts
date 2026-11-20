@@ -342,6 +342,10 @@ export class MainpageComponent implements OnInit {
       this.mySelectedTab = 'Operations';
       this.selectedTab = 'grn_pushing';
     }
+    if (this.router.url.includes('mainpage/rack_label_print')) {
+      this.mySelectedTab = 'Operations';
+      this.selectedTab = 'rack_label_print';
+    }
     if (this.router.url.includes('mainpage/label_print')) {
       this.mySelectedTab = 'Operations';
       this.selectedTab = 'label_print';
@@ -457,6 +461,7 @@ export class MainpageComponent implements OnInit {
       this.selectedTab === 'prebinning_aaproval' ||
       this.selectedTab === 'grn_pushing' ||
       this.selectedTab === 'label_print' ||
+      this.selectedTab === 'rack_label_print' ||
       this.selectedTab === 'pick_list' ||
       this.selectedTab === 'pallet_storage' ||
       this.selectedTab === 'storage_details' ||

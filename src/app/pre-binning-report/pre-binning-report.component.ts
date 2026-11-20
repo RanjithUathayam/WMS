@@ -48,6 +48,7 @@ export class PreBinningReportComponent implements OnInit {
   sortBy: string = 'createdDate';
   sortDir: string = 'DESC';
   totals: { [key: string]: number } = {};
+  warehouses: any[] = [];
 
   constructor(private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private fb: FormBuilder) { }
 
@@ -62,7 +63,16 @@ export class PreBinningReportComponent implements OnInit {
       fromDate: [this.defaultFromDate],
       toDate: [this.defaultToDate]
     });
+    this.loadWarehouses();
     this.load();
+  }
+
+  loadWarehouses(): void {
+    this.apiservice.getWarehouseList().subscribe((res: any) => {
+      this.warehouses = res.success ? res.data : [];
+    }, () => {
+      this.warehouses = [];
+    });
   }
 
   private buildFilters(): any {

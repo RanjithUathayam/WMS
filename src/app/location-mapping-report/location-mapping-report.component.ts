@@ -41,6 +41,8 @@ export class LocationMappingReportComponent implements OnInit {
   sortBy: string = 'mappedAt';
   sortDir: string = 'DESC';
   totals: { [key: string]: number } = {};
+  warehouses: any[] = [];
+  rowOptions: any[] = [];
 
   constructor(private apiservice: ApiService, private swal: SwalService, private appComponent: AppComponent, private fb: FormBuilder) { }
 
@@ -55,7 +57,28 @@ export class LocationMappingReportComponent implements OnInit {
       fromDate: [this.defaultFromDate],
       toDate: [this.defaultToDate]
     });
+    this.loadWarehouses();
     this.load();
+  }
+
+  loadWarehouses(): void {
+    this.apiservice.getWarehouseList().subscribe((res: any) => {
+      this.warehouses = res.success ? res.data : [];
+    }, () => {
+      this.warehouses = [];
+    });
+  }
+
+  onWarehouseChange(): void {
+    this.filterForm.patchValue({ rowCode: '' });
+    this.rowOptions = [];
+    const warehouseCode = this.filterForm.value.warehouseCode;
+    if (!warehouseCode) return;
+    this.apiservice.getRowList(warehouseCode, true).subscribe((res: any) => {
+      this.rowOptions = res.success ? res.data : [];
+    }, () => {
+      this.rowOptions = [];
+    });
   }
 
   private buildFilters(): any {
@@ -121,6 +144,7 @@ export class LocationMappingReportComponent implements OnInit {
 
   clear(): void {
     this.searchTerm = '';
+    this.rowOptions = [];
     this.filterForm.reset({
       warehouseCode: '', rowCode: '', locationCode: '', palletId: '', status: '', itemCode: '',
       fromDate: this.defaultFromDate,

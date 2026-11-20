@@ -4,7 +4,7 @@
       <div class="col-12">
         <div class="px-4 pt-2">
           <app-report-toolbar [searchValue]="searchTerm" [activeFilterCount]="activeFilterCount"
-            searchPlaceholder="Search by GRN No, Warehouse, Item Code, Item Name, Bin ID..."
+            searchPlaceholder="Search all fields: GRN No, Warehouse, Bin ID, Item, Status, Created By..."
             (searchChange)="onSearchChange($event)" (filterClick)="openSidebar()"
             (exportClick)="export($event)" (clearAll)="clear()"></app-report-toolbar>
         </div>
@@ -41,7 +41,10 @@
 
       <div class="positionset p-2 py-3">
         <label class="filter_label w-100" for="whsCode">Warehouse :</label>
-        <input type="text" id="whsCode" class="form-control" formControlName="whsCode">
+        <select id="whsCode" class="form-control" formControlName="whsCode">
+          <option value="">All</option>
+          <option *ngFor="let wh of warehouses" [value]="wh.warehouseCode">{{ wh.warehouseName }} ({{ wh.warehouseCode }})</option>
+        </select>
       </div>
 
       <div class="positionset p-2 py-3">
@@ -65,6 +68,10 @@
           <option value="">All</option>
           <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
+          <option value="Approve">Approved</option>
+          <option value="PartialApprove">Partially Approved</option>
+          <option value="ShortClose">Short Closed</option>
+          <option value="Reject">Rejected</option>
         </select>
       </div>
 

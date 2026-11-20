@@ -144,6 +144,9 @@
           <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('label_print'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'label_print' }">
             <i class="fa fa-qrcode mr-2"></i>Label Print
           </button>
+          <button class="sidebar-link sidebar-link--teal" type="button" (click)="selectTab('rack_label_print'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'rack_label_print' }">
+            <i class="fa fa-th mr-2"></i>Rack Label Print
+          </button>
           <button class="sidebar-link sidebar-link--teal" type="button" *ngIf="menuRights.picking_creates" (click)="selectTab('pick_list'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'pick_list' }">
             <i class="fa-solid fa-list-check mr-2"></i>Pick List
           </button>

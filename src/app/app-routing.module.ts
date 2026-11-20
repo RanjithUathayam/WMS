@@ -16,6 +16,7 @@ import { AuthGuard } from './auth.guard';
 import { BinwisePrebininningActionComponent } from './binwise-prebininning-action/binwise-prebininning-action.component';
 import { GrnPushingComponent } from './grn-pushing/grn-pushing.component';
 import { LabelPrintComponent } from './label-print/label-print.component';
+import { RackLabelPrintComponent } from './rack-label-print/rack-label-print.component';
 import { LocationMasterComponent } from './location-master/location-master.component';
 import { PreBinningReportComponent } from './pre-binning-report/pre-binning-report.component';
 import { PalletMappingReportComponent } from './pallet-mapping-report/pallet-mapping-report.component';
@@ -38,6 +39,7 @@ const routes: Routes = [
         { path: 'operation_binwisePrebinningReject', component: BinwisePrebininningActionComponent},
         { path: 'grn_pushing', component: GrnPushingComponent },
         { path: 'label_print', component: LabelPrintComponent },
+        { path: 'rack_label_print', component: RackLabelPrintComponent },
         { path: 'pick_list', component: PickListComponent },
         { path: 'pick_list/:id', component: PickListDetailComponent },
         { path: 'prebinning_aaproval', component: PrebinningApprovalComponent },

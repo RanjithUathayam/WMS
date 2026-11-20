@@ -14,6 +14,9 @@ declare var qz: any;
 
 type BatchStatus = 'Idle' | 'Reserving' | 'Reserved' | 'Printing' | 'Printed' | 'Failed';
 
+/** 'auto' = reserve new Label Numbers from the backend; 'manual' = print values the user types in. */
+type PrintMode = 'auto' | 'manual';
+
 interface ReservedLabel {
   labelNumber: string;
   qrValue: string;
@@ -53,7 +56,13 @@ interface FieldErrors {
   speed?: string;
   gap?: string;
   offset?: string;
+  manualValues?: string;
 }
+
+// Must match MANUAL_VALUE_FORBIDDEN / limits in the API's labelReservationService.printManualLabelsAsync.
+const MANUAL_VALUE_FORBIDDEN = /["^~\\\x00-\x1F\x7F]/;
+const MAX_MANUAL_VALUE_LENGTH = 64;
+const MAX_MANUAL_VALUES = 100;
 
 const SAVED_SETTINGS_KEY = 'labelPrint.printerSettings.v1';
 
@@ -118,6 +127,11 @@ export class LabelPrintComponent implements OnInit {
 
   previewIndex = 0;
   previewQrDataUrl = '';
+
+  // Manual mode — label values typed by the user (one per line). Not reserved or tracked by the backend.
+  printMode: PrintMode = 'auto';
+  manualValuesText = '';
+  readonly maxManualValues = MAX_MANUAL_VALUES;
 
   constructor(
     private route: ActivatedRoute,
@@ -382,7 +396,90 @@ export class LabelPrintComponent implements OnInit {
   }
 
   get totalPhysicalPrints(): number {
-    return Number(this.labelCount || 0) * Number(this.copies || 0);
+    return this.uniqueLabelCount * Number(this.copies || 0);
+  }
+
+  get uniqueLabelCount(): number {
+    return this.isManualMode ? this.manualValues.length : Number(this.labelCount || 0);
+  }
+
+  // ===== Manual mode =====
+
+  get isManualMode(): boolean {
+    return this.printMode === 'manual';
+  }
+
+  /** Non-blank lines of the manual input, trimmed. */
+  get manualValues(): string[] {
+    return (this.manualValuesText || '')
+      .split(/\r?\n/)
+      .map((v) => v.trim())
+      .filter((v) => v !== '');
+  }
+
+  setPrintMode(mode: PrintMode) {
+    if (this.printMode === mode || this.batchStatus === 'Reserving' || this.batchStatus === 'Printing') {
+      return;
+    }
+    this.printMode = mode;
+    this.fieldErrors.manualValues = undefined;
+    this.previewIndex = 0;
+    // A failed/printed state belongs to the other mode's batch — don't carry it across.
+    if (this.batchStatus === 'Failed' || this.batchStatus === 'Printed') {
+      this.batchStatus = this.isReserved ? 'Reserved' : 'Idle';
+      this.batchError = '';
+    }
+    this.renderPreviewQr();
+  }
+
+  onManualValuesChange() {
+    this.fieldErrors.manualValues = undefined;
+    if (this.batchStatus === 'Failed' || this.batchStatus === 'Printed') {
+      this.batchStatus = 'Idle';
+      this.batchError = '';
+    }
+    if (this.previewIndex >= this.manualValues.length) {
+      this.previewIndex = 0;
+    }
+    this.renderPreviewQr();
+  }
+
+  private validateManualValues(): boolean {
+    const values = this.manualValues;
+    let error: string | undefined;
+    if (values.length === 0) {
+      error = 'Enter at least one label value.';
+    } else if (values.length > MAX_MANUAL_VALUES) {
+      error = `A maximum of ${MAX_MANUAL_VALUES} label values can be printed at once.`;
+    } else {
+      const tooLong = values.find((v) => v.length > MAX_MANUAL_VALUE_LENGTH);
+      const badChar = values.find((v) => MANUAL_VALUE_FORBIDDEN.test(v));
+      if (tooLong) {
+        error = `"${tooLong.slice(0, 20)}..." is longer than ${MAX_MANUAL_VALUE_LENGTH} characters.`;
+      } else if (badChar) {
+        error = `"${badChar}" contains a character that cannot be printed (", ^, ~ or \\).`;
+      }
+    }
+    this.fieldErrors.manualValues = error;
+    return !error;
+  }
+
+  get previewCount(): number {
+    return this.isManualMode ? this.manualValues.length : this.reservedLabels.length;
+  }
+
+  previewPrev() {
+    if (this.previewIndex > 0) {
+      this.previewIndex--;
+      this.renderPreviewQr();
+    }
+  }
+
+  previewNext() {
+    if (this.previewIndex < this.previewCount - 1) {
+      this.previewIndex++;
+      this.renderPreviewQr();
+    }
   }
 
   // ===== Preview (reserves Label Numbers from the backend, never generates them locally) =====
@@ -392,7 +489,16 @@ export class LabelPrintComponent implements OnInit {
   }
 
   get previewLabel(): ReservedLabel | null {
+    if (this.isManualMode) {
+      const value = this.manualValues[this.previewIndex];
+      return value ? { labelNumber: value, qrValue: value } : null;
+    }
     return this.reservedLabels[this.previewIndex] || null;
+  }
+
+  /** Whether the Print button has something to print in the current mode. */
+  get canPrint(): boolean {
+    return this.isManualMode ? this.manualValues.length > 0 : this.isReserved;
   }
 
   get labelAspectRatio(): string {
@@ -420,6 +526,14 @@ export class LabelPrintComponent implements OnInit {
   preview() {
     this.onLabelCountChange();
     this.onCopiesChange();
+
+    if (this.isManualMode) {
+      // Nothing to reserve — manual values are previewed exactly as typed.
+      if (this.validateManualValues()) {
+        this.renderPreviewQr();
+      }
+      return;
+    }
 
     if (this.isReserved) {
       // Already reserved for this batch — nothing new to request, just (re)render the preview.
@@ -491,7 +605,12 @@ export class LabelPrintComponent implements OnInit {
       return;
     }
 
-    if (!this.isReserved) {
+    if (this.isManualMode) {
+      if (!this.validateManualValues()) {
+        this.swal.error('Error', this.fieldErrors.manualValues || 'Enter at least one label value.');
+        return;
+      }
+    } else if (!this.isReserved) {
       this.swal.error('Error', 'Click Preview first to reserve label numbers before printing.');
       return;
     }
@@ -500,7 +619,8 @@ export class LabelPrintComponent implements OnInit {
       title: 'Print Confirmation',
       html: `
         <div style="text-align:left; font-size: 0.95rem; line-height: 1.6;">
-          <div>Unique Labels: <strong>${this.reservedLabels.length}</strong></div>
+          <div>Mode: <strong>${this.isManualMode ? 'Manual value' : 'Auto (reserved numbers)'}</strong></div>
+          <div>Unique Labels: <strong>${this.uniqueLabelCount}</strong></div>
           <div>Copies Per Label: <strong>${this.copies}</strong></div>
           <div>Total Physical Prints: <strong>${this.totalPhysicalPrints}</strong></div>
           <hr style="margin: 8px 0;">
@@ -517,7 +637,11 @@ export class LabelPrintComponent implements OnInit {
       confirmButtonText: 'Yes, Print'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.executePrint();
+        if (this.isManualMode) {
+          this.executeManualPrint();
+        } else {
+          this.executePrint();
+        }
       }
     });
   }
@@ -604,12 +728,83 @@ export class LabelPrintComponent implements OnInit {
       });
   }
 
+  /** Manual mode: the backend only builds the printer command (no reservation / confirm round-trip),
+   *  then QZ Tray sends it to the local printer. Values stay in the box so they can be reprinted. */
+  private executeManualPrint() {
+    this.batchStatus = 'Printing';
+    this.batchError = '';
+
+    const payload = {
+      values: this.manualValues,
+      copies: this.copies,
+      printerName: this.selectedPrinter,
+      mfgDate: this.mfgDate,
+      density: this.density,
+      speed: this.speed,
+      gapMm: this.gapMm,
+      offsetMm: this.offsetMm,
+      labelWidthMm: this.labelWidthMM,
+      labelHeightMm: this.labelHeightMM
+    };
+
+    this.appComponent.showLoading('Printing labels...');
+    this.apiservice.printManualLabels(payload).subscribe(
+      (res: any) => {
+        if (!res?.success) {
+          this.failManualPrint(this.getErrorMessage(res, 'Printing failed.'), res);
+          return;
+        }
+        this.ensureQzConnected()
+          .then(() => {
+            const config = qz.configs.create(res.data.printerName, { encoding: 'UTF-8' });
+            return qz.print(config, [{ type: 'raw', format: 'plain', data: res.data.command }]);
+          })
+          .then(() => {
+            this.appComponent.hideLoading();
+            this.batchStatus = 'Printed';
+            this.swal.success_timer('Print job completed successfully');
+            setTimeout(() => {
+              if (this.isManualMode && this.batchStatus === 'Printed') {
+                this.batchStatus = 'Idle';
+              }
+            }, 1200);
+          })
+          .catch((qzError: any) => {
+            this.failManualPrint(this.getQzErrorMessage(qzError, 'Sending the print job to the printer failed.'), qzError);
+          });
+      },
+      (error: any) => {
+        this.failManualPrint(this.getErrorMessage(error, 'Printing failed.'), error);
+      }
+    );
+  }
+
+  private failManualPrint(message: string, detail: any) {
+    this.appComponent.hideLoading();
+    this.batchStatus = 'Failed';
+    this.batchError = message;
+    console.error('Manual label print failed:', detail);
+    this.swal.error('Print Error', message);
+  }
+
   retry() {
+    if (this.isManualMode) {
+      this.print();
+      return;
+    }
     // Reuses the exact same reserved labelNumbers/QR values — never requests new ones.
     this.executePrint();
   }
 
   cancel() {
+    if (this.isManualMode) {
+      // Manual values aren't reserved anywhere — Cancel just clears the input.
+      this.manualValuesText = '';
+      this.batchStatus = 'Idle';
+      this.batchError = '';
+      this.onManualValuesChange();
+      return;
+    }
     if (!this.isReserved && this.batchStatus === 'Idle') {
       return;
     }

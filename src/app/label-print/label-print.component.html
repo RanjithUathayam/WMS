@@ -79,7 +79,13 @@
     <div class="lp-card">
       <div class="card-head">
         <h3 class="panel-title"><i class="fa fa-tag mr-2"></i>Label Preview</h3>
-        <span class="preview-note" *ngIf="!isReserved">Not reserved yet</span>
+        <span class="preview-note" *ngIf="!isManualMode && !isReserved">Not reserved yet</span>
+        <span class="preview-note" *ngIf="isManualMode && previewCount === 0">Enter a label value</span>
+        <span class="preview-nav" *ngIf="previewCount > 1">
+          <button type="button" class="nav-btn" (click)="previewPrev()" [disabled]="previewIndex === 0"><i class="fa fa-chevron-left"></i></button>
+          {{ previewIndex + 1 }} / {{ previewCount }}
+          <button type="button" class="nav-btn" (click)="previewNext()" [disabled]="previewIndex >= previewCount - 1"><i class="fa fa-chevron-right"></i></button>
+        </span>
       </div>
       <div class="card-body preview-body">
         <div class="label-stage">
@@ -138,7 +144,36 @@
         <span class="status-badge" [ngClass]="'status-badge--' + batchStatus.toLowerCase()">{{ batchStatus }}</span>
       </div>
       <div class="card-body">
-        <div class="field-grid field-grid--2">
+        <div class="field-row">
+          <label>Label Value</label>
+          <div class="mode-toggle">
+            <button type="button" class="mode-btn" [class.mode-btn--active]="!isManualMode" (click)="setPrintMode('auto')"
+              [disabled]="batchStatus === 'Reserving' || batchStatus === 'Printing'">
+              <i class="fa fa-magic mr-1"></i>Auto Generate
+            </button>
+            <button type="button" class="mode-btn" [class.mode-btn--active]="isManualMode" (click)="setPrintMode('manual')"
+              [disabled]="batchStatus === 'Reserving' || batchStatus === 'Printing'">
+              <i class="fa fa-keyboard-o mr-1"></i>Manual Entry
+            </button>
+          </div>
+        </div>
+
+        <div class="field-grid field-grid--2" *ngIf="isManualMode">
+          <div class="field-row">
+            <label>Label Value(s) <span class="field-value">{{ manualValues.length }}</span></label>
+            <textarea rows="4" class="manual-input" [(ngModel)]="manualValuesText" (ngModelChange)="onManualValuesChange()"
+              [class.field-invalid]="fieldErrors.manualValues" [disabled]="batchStatus === 'Printing'"
+              placeholder="Type a label value. For several labels, put one value per line."></textarea>
+            <span class="field-error" *ngIf="fieldErrors.manualValues">{{ fieldErrors.manualValues }}</span>
+            <span class="field-hint" *ngIf="!fieldErrors.manualValues">One value per line (max {{ maxManualValues }}). Printed as-is &mdash; not reserved or checked for duplicates.</span>
+          </div>
+          <div class="field-row">
+            <label>Copies (per Label)</label>
+            <input type="number" min="1" [max]="maxCopies" [(ngModel)]="copies" (ngModelChange)="onCopiesChange()">
+          </div>
+        </div>
+
+        <div class="field-grid field-grid--2" *ngIf="!isManualMode">
           <div class="field-row">
             <label>Label Count</label>
             <input type="number" min="1" [max]="maxLabelCount" [(ngModel)]="labelCount"
@@ -152,7 +187,7 @@
         </div>
 
         <div class="summary-row">
-          <span class="stat-chip"><i class="fa fa-tags mr-1"></i>Unique Labels: <strong>{{ labelCount }}</strong></span>
+          <span class="stat-chip"><i class="fa fa-tags mr-1"></i>Unique Labels: <strong>{{ uniqueLabelCount }}</strong></span>
           <span class="stat-chip"><i class="fa fa-copy mr-1"></i>Copies per Label: <strong>{{ copies }}</strong></span>
           <span class="stat-chip stat-chip--accent"><i class="fa fa-print mr-1"></i>Total Physical Prints: <strong>{{ totalPhysicalPrints }}</strong></span>
         </div>
@@ -174,7 +209,7 @@
             <i class="fa fa-ban mr-1"></i>Cancel
           </button>
           <button class="lp-btn lp-btn--solid" *ngIf="batchStatus !== 'Failed'" (click)="print()"
-            [disabled]="!isReserved || batchStatus === 'Reserving' || batchStatus === 'Printing' || batchStatus === 'Printed'">
+            [disabled]="!canPrint || batchStatus === 'Reserving' || batchStatus === 'Printing' || batchStatus === 'Printed'">
             <i class="fa fa-print mr-1"></i>{{ batchStatus === 'Printed' ? 'Printed' : 'Print' }}
           </button>
           <button class="lp-btn lp-btn--solid" *ngIf="batchStatus === 'Failed'" (click)="retry()">

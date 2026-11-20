@@ -163,6 +163,83 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.field-row textarea.manual-input {
+  width: 100%;
+  border: 1px solid #dce8f2;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.86rem;
+  font-family: inherit;
+  color: #1e293b;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field-row textarea.manual-input:focus {
+  border-color: #016DB0;
+  box-shadow: 0 0 0 3px rgba(1, 109, 176, 0.12);
+}
+
+.field-row textarea.manual-input.field-invalid {
+  border-color: #dc2626;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  border: 1px solid #dce8f2;
+  border-radius: 10px;
+  padding: 3px;
+  background: #f7fafd;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.mode-btn--active {
+  background: #016DB0;
+  color: #fff;
+}
+
+.mode-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.preview-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.nav-btn {
+  border: 1px solid #dce8f2;
+  background: #fff;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  color: #016DB0;
+}
+
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .field-row input:focus {
   border-color: #016DB0;
   box-shadow: 0 0 0 3px rgba(1, 109, 176, 0.12);
