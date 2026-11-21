@@ -59,7 +59,9 @@
             <div class="pl-sub" *ngIf="detail.completedBy">by {{ detail.completedBy }}</div></div>
           <div><span class="pl-label">Source DocNum(s)</span><b>{{ detail.sourceDocNums.join(', ') }}</b></div>
           <div><span class="pl-label">Total Picked</span><b>{{ totals.picked | number: '1.0-3' }}</b>
-            <div class="pl-sub" *ngIf="detail.dc">DC qty {{ detail.dc.totalQty | number: '1.0-3' }}</div></div>
+            <div class="pl-sub" *ngIf="detail.dc">DC qty {{ detail.dc.totalQty | number: '1.0-3' }}</div>
+            <div class="pl-sub pl-warn-text" *ngIf="totals.excess > 0">incl. {{ totals.excess | number: '1.0-3' }} full-box excess
+              (required {{ totals.required | number: '1.0-3' }})</div></div>
         </div>
       </div>
     </div>
@@ -90,8 +92,14 @@
 
     <!-- ============================================================ KPIs -->
     <div class="pl-kpis">
-      <div class="pl-kpi"><span class="pl-label">Required Qty</span><b>{{ totals.required | number: '1.0-3' }}</b></div>
-      <div class="pl-kpi pl-kpi--picked"><span class="pl-label">Picked Qty</span><b>{{ totals.picked | number: '1.0-3' }}</b></div>
+      <div class="pl-kpi"><span class="pl-label">Required Qty</span><b>{{ totals.required | number: '1.0-3' }}</b>
+        <span class="pl-sub" *ngIf="totals.planned > totals.required">Full-box plan {{ totals.planned | number: '1.0-3' }}</span>
+      </div>
+      <div class="pl-kpi pl-kpi--picked"><span class="pl-label">Picked Qty</span><b>{{ totals.picked | number: '1.0-3' }}</b>
+        <span class="pl-sub pl-warn-text" *ngIf="totals.excess > 0" title="Boxes are picked whole: this much more than required was picked">
+          <i class="fa-solid fa-triangle-exclamation"></i> Excess {{ totals.excess | number: '1.0-3' }}
+        </span>
+      </div>
       <div class="pl-kpi pl-kpi--remaining" [class.is-zero]="totals.remaining <= 0">
         <span class="pl-label">Remaining Qty</span><b>{{ totals.remaining | number: '1.0-3' }}</b>
       </div>
@@ -111,12 +119,16 @@
           <button type="button" class="pl-link-btn" (click)="cancelScan()">Reset</button>
         </div>
 
-        <ol class="pl-steps">
+        <ol class="pl-steps pl-steps--3">
           <li [class.is-active]="stage === 'pallet'" [class.is-done]="stage !== 'pallet'">Pallet</li>
-          <li [class.is-active]="stage === 'box'" [class.is-done]="stage === 'item' || stage === 'qty'">Box</li>
-          <li [class.is-active]="stage === 'item'" [class.is-done]="stage === 'qty'">Item</li>
-          <li [class.is-active]="stage === 'qty'">Qty</li>
+          <li [class.is-active]="stage === 'box'" [class.is-done]="stage === 'confirm'">Box</li>
+          <li [class.is-active]="stage === 'confirm'">Full Box</li>
         </ol>
+
+        <div class="pl-fullbox-note">
+          <i class="fa-solid fa-box"></i>
+          <span><b>Full box picking.</b> Scan a pallet and a box — the whole box is picked. Quantities cannot be entered.</span>
+        </div>
 
         <form class="pl-scan-form" (ngSubmit)="savePick()" autocomplete="off">
           <label class="pl-scan-field" [class.is-active]="stage === 'pallet'">
@@ -135,65 +147,43 @@
           <div class="pl-hint pl-hint--left" *ngIf="stage === 'box' && boxHints.length">
             Boxes on this pallet with items needed: <b>{{ boxHints.join(', ') }}</b>
           </div>
-
-          <label class="pl-scan-field" [class.is-active]="stage === 'item' || stage === 'qty'">
-            <span>
-              <i class="fa-solid fa-tag"></i>Item
-              <small class="pl-scan-tip" *ngIf="stock">Scan again to add 1</small>
-            </span>
-            <input #itemInput name="itemCode" class="pl-scan-input" placeholder="Scan item code"
-              [(ngModel)]="scan.itemCode" (keydown.enter)="$event.preventDefault(); onItemScanned()"
-              (focus)="onItemFocus()" [disabled]="!boxScan || isSaving || isScanning">
-          </label>
-          <div class="pl-hint pl-hint--left" *ngIf="stage === 'item' && itemHints.length">
-            Needed from this box:
-            <span class="pl-item-hint" *ngFor="let h of itemHints"><b>{{ h.itemCode }}</b> ({{ h.remainingRequiredQty | number: '1.0-3' }})</span>
+          <div class="pl-hint pl-hint--left pl-warn-text" *ngIf="stage === 'box' && blockedBoxHints.length">
+            Cannot be picked whole (hold items not on this Pick List): {{ blockedBoxHints.join(', ') }}
           </div>
 
-          <div class="pl-validating" *ngIf="isScanning"><i class="fa-solid fa-spinner fa-spin"></i>Checking inventory…</div>
+          <div class="pl-validating" *ngIf="isScanning"><i class="fa-solid fa-spinner fa-spin"></i>Checking box…</div>
 
-          <!-- Server-validated inventory -->
-          <div class="pl-validated" *ngIf="stock">
-            <div class="pl-validated-head"><i class="fa-solid fa-circle-check"></i>Inventory found</div>
+          <!-- Server-validated full-box preview: exactly what Save will pick -->
+          <div class="pl-validated" *ngIf="boxScan">
+            <div class="pl-validated-head"><i class="fa-solid fa-circle-check"></i>Full box {{ boxScan.boxNumber }}</div>
             <dl>
-              <div><dt>Item</dt><dd class="pl-code">{{ stock.itemCode }}</dd></div>
-              <div><dt>Warehouse</dt><dd>{{ stock.warehouseCode || '—' }}</dd></div>
-              <div><dt>Location</dt><dd>{{ stock.locationCode || '—' }}</dd></div>
-              <div><dt>Pallet / Box</dt><dd class="pl-code">{{ stock.palletNumber }} / {{ stock.boxNumber }}</dd></div>
-              <div><dt>Available</dt><dd class="pl-big">{{ stock.pickableQty | number: '1.0-3' }}</dd></div>
-              <div><dt>Remaining</dt><dd class="pl-big">{{ (selectedLine?.remainingQty || 0) | number: '1.0-3' }}</dd></div>
+              <div><dt>Warehouse</dt><dd>{{ boxScan.warehouse || '—' }}</dd></div>
+              <div><dt>Location</dt><dd>{{ boxScan.location || '—' }}</dd></div>
+              <div><dt>Pallet / Box</dt><dd class="pl-code">{{ boxScan.palletNumber }} / {{ boxScan.boxNumber }}</dd></div>
+              <div><dt>Box Qty (to pick)</dt><dd class="pl-big">{{ boxScan.totalBoxQty | number: '1.0-3' }}</dd></div>
             </dl>
-            <div class="pl-line-pick" *ngIf="openLinesForStock.length > 1; else singleLine">
-              <label for="pl-line-select" class="pl-label">Pick for source line</label>
-              <select id="pl-line-select" name="line" class="pl-input" [(ngModel)]="selectedLineId" (ngModelChange)="onLineChange()">
-                <option *ngFor="let l of openLinesForStock" [ngValue]="l.pickListDetailId">
-                  DocNum {{ l.sourceDocNum }} / Line {{ l.sourceLineNum }} — {{ l.remainingQty }} remaining
-                </option>
-              </select>
-            </div>
-            <ng-template #singleLine>
-              <div class="pl-line-pick pl-sub" *ngIf="selectedLine">
-                For DocNum <b>{{ selectedLine.sourceDocNum }}</b> / Line <b>{{ selectedLine.sourceLineNum }}</b>
-              </div>
-            </ng-template>
-          </div>
-
-          <div class="pl-scan-field" [class.is-active]="stage === 'qty'">
-            <span>
-              <i class="fa-solid fa-hashtag"></i>Pick Qty <small *ngIf="stock">(max {{ maxPickQty }})</small>
-              <button type="button" class="pl-link-btn pl-max-btn" *ngIf="stock" (click)="setMaxQty()" [disabled]="isSaving">Max</button>
-            </span>
-            <div class="pl-qty-control">
-              <button type="button" class="pl-qty-btn" (click)="changeQty(-1)" aria-label="Decrease quantity"
-                [disabled]="!stock || isSaving || (scan.pickQty || 0) <= 1"><i class="fa-solid fa-minus"></i></button>
-              <input #qtyInput name="pickQty" type="number" step="any" min="0" class="pl-scan-input pl-scan-input--qty"
-                placeholder="Qty" [(ngModel)]="scan.pickQty" (focus)="stage = 'qty'"
-                [disabled]="!stock || isSaving" [class.is-invalid]="qtyError" aria-label="Pick quantity">
-              <button type="button" class="pl-qty-btn" (click)="changeQty(1)" aria-label="Increase quantity"
-                [disabled]="!stock || isSaving || (scan.pickQty || 0) >= maxPickQty"><i class="fa-solid fa-plus"></i></button>
+            <table class="pl-table pl-table--compact pl-box-items">
+              <thead>
+                <tr><th>Item</th><th class="pl-num">Box Qty</th><th class="pl-num">Still req.</th><th class="pl-num">Excess</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let i of boxScan.items">
+                  <td class="pl-code">{{ i.itemCode }}
+                    <div class="pl-sub" *ngFor="let a of i.allocations">DocNum {{ a.sourceDocNum }} / L{{ a.sourceLineNum }}: {{ a.qty | number: '1.0-3' }}</div>
+                  </td>
+                  <td class="pl-num pl-strong">{{ i.fullBoxQty | number: '1.0-3' }}</td>
+                  <td class="pl-num">{{ i.remainingRequiredQty | number: '1.0-3' }}</td>
+                  <td class="pl-num" [class.pl-warn-text]="i.excessQty > 0">{{ i.excessQty > 0 ? '+' + (i.excessQty | number: '1.0-3') : '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pl-alert pl-alert--warn pl-alert--inline" *ngIf="boxScan.totalExcessQty > 0">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>This box gives <b>{{ boxScan.totalExcessQty | number: '1.0-3' }}</b> more than required
+                ({{ boxScan.totalRequiredQty | number: '1.0-3' }} required, {{ boxScan.totalBoxQty | number: '1.0-3' }} in the box).
+                Partial boxes are not allowed — the whole box is picked, and DC / Stock Transfer use {{ boxScan.totalBoxQty | number: '1.0-3' }}.</span>
             </div>
           </div>
-          <div class="pl-field-error" *ngIf="qtyError">{{ qtyError }}</div>
 
           <div class="pl-alert pl-alert--error pl-alert--inline" *ngIf="scanError" role="alert">
             <i class="fa-solid fa-triangle-exclamation"></i>{{ scanError.message }}
@@ -204,9 +194,16 @@
           <div class="pl-alert pl-alert--ok pl-alert--inline" *ngIf="lastPickMessage && !scanError" role="status">
             <i class="fa-solid fa-check"></i>{{ lastPickMessage }}
           </div>
+          <div class="pl-alert pl-alert--warn pl-alert--inline" *ngIf="lastPickWarning && !scanError">
+            <i class="fa-solid fa-triangle-exclamation"></i>{{ lastPickWarning }}
+          </div>
 
-          <button type="submit" class="pl-btn pl-btn--solid pl-btn--block pl-btn--lg" [disabled]="!canSavePick">
-            <i class="fa-solid" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>Save Pick
+          <button #confirmButton type="submit" class="pl-btn pl-btn--solid pl-btn--block pl-btn--lg" [disabled]="!canSavePick">
+            <i class="fa-solid" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-box'"></i>
+            {{ boxScan ? 'Pick Full Box (' + (boxScan.totalBoxQty | number: '1.0-3') + ')' : 'Pick Full Box' }}
+          </button>
+          <button type="button" class="pl-link-btn pl-cancel-box" *ngIf="boxScan && !isSaving" (click)="cancelBox()">
+            Not this box — scan another
           </button>
         </form>
       </aside>
@@ -233,6 +230,7 @@
                   <th class="pl-num">Required</th>
                   <th class="pl-num">Picked</th>
                   <th class="pl-num">Remaining</th>
+                  <th class="pl-num" title="Picked beyond the requirement because boxes are picked whole">Excess</th>
                   <th class="pl-num">Available</th>
                   <th>Warehouse</th>
                   <th>Location</th>
@@ -246,9 +244,12 @@
                   [class.is-selected]="item.itemCode === selectedItemCode" (click)="selectItem(item)">
                   <td class="pl-code pl-strong">{{ item.itemCode }}</td>
                   <td>{{ item.itemName }}<div class="pl-sub" *ngIf="item.lines.length > 1">{{ item.lines.length }} source lines</div></td>
-                  <td class="pl-num">{{ item.requiredQty | number: '1.0-3' }}</td>
+                  <td class="pl-num">{{ item.requiredQty | number: '1.0-3' }}
+                    <div class="pl-sub" *ngIf="item.plannedQty > item.requiredQty" title="Full-box quantity planned at generation">plan {{ item.plannedQty | number: '1.0-3' }}</div>
+                  </td>
                   <td class="pl-num">{{ item.pickedQty | number: '1.0-3' }}</td>
                   <td class="pl-num pl-strong">{{ item.remainingQty | number: '1.0-3' }}</td>
+                  <td class="pl-num" [class.pl-warn-text]="item.excessQty > 0">{{ item.excessQty > 0 ? '+' + (item.excessQty | number: '1.0-3') : '—' }}</td>
                   <td class="pl-num" [class.pl-danger-text]="item.shortageQty > 0">
                     {{ isLoadingInventory && !inventory ? '…' : (item.availableQty | number: '1.0-3') }}
                     <div class="pl-sub" *ngIf="item.shortageQty > 0">short {{ item.shortageQty | number: '1.0-3' }}</div>
@@ -292,6 +293,14 @@
             Insufficient stock: {{ item.availableQty | number: '1.0-3' }} available, {{ item.remainingQty }} still required
             (short {{ item.shortageQty | number: '1.0-3' }}).
           </div>
+          <div class="pl-alert pl-alert--muted" *ngIf="!isLoadingInventory && item.suggestedBoxes.length">
+            <i class="fa-solid fa-box"></i>
+            <span>Suggested full box{{ item.suggestedBoxes.length > 1 ? 'es' : '' }}:
+              <b>{{ item.suggestedBoxes.length }}</b> box{{ item.suggestedBoxes.length > 1 ? 'es' : '' }}
+              giving <b>{{ item.suggestedPickQty | number: '1.0-3' }}</b> for {{ item.remainingQty | number: '1.0-3' }} still required<span
+                *ngIf="item.suggestedExcessQty > 0" class="pl-warn-text"> (excess {{ item.suggestedExcessQty | number: '1.0-3' }})</span>.
+              Suggested rows are marked below.</span>
+          </div>
 
           <div class="pl-table-wrap">
             <table class="pl-table">
@@ -301,25 +310,28 @@
                   <th>Location</th>
                   <th>Pallet</th>
                   <th>Box</th>
-                  <th class="pl-num">Available Qty</th>
+                  <th class="pl-num">Box Qty</th>
                   <th class="pl-num">Picked here</th>
                   <th *ngIf="isEditable"></th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let p of item.positions; trackBy: trackByPosition"
-                  [class.is-selected]="p.palletNumber === scan.palletNumber && p.boxNumber === scan.boxNumber">
+                  [class.is-selected]="p.palletNumber === scan.palletNumber && p.boxNumber === scan.boxNumber"
+                  [class.is-suggested]="isSuggestedBox(item, p)">
                   <td><i class="fa-solid fa-warehouse pl-muted"></i> {{ p.warehouse }}</td>
                   <td><i class="fa-solid fa-location-dot pl-muted"></i> {{ p.location || '—' }}</td>
                   <td class="pl-code">{{ p.palletNumber }}</td>
-                  <td class="pl-code">{{ p.boxNumber }}</td>
+                  <td class="pl-code">{{ p.boxNumber }}
+                    <span class="pl-badge pl-badge--open" *ngIf="isSuggestedBox(item, p)">Suggested</span>
+                  </td>
                   <td class="pl-num pl-strong">{{ p.availableQty | number: '1.0-3' }}</td>
                   <td class="pl-num">{{ pickedFromBox(item.itemCode, p.palletNumber, p.boxNumber) || '—' }}</td>
                   <td *ngIf="isEditable" class="pl-num">
                     <button type="button" class="pl-btn pl-btn--outline pl-btn--sm"
                       [disabled]="item.remainingQty <= 0 || p.availableQty <= 0 || isScanning || isSaving"
-                      (click)="pickFromPosition(item, p)">
-                      <i class="fa-solid fa-hand-pointer"></i>Pick
+                      (click)="pickFromPosition(item, p)" title="Load this box in the scan panel to pick it whole">
+                      <i class="fa-solid fa-box"></i>Pick box
                     </button>
                   </td>
                 </tr>
@@ -371,7 +383,9 @@
                   <td>{{ t.location || '—' }}</td>
                   <td class="pl-code">{{ t.palletNumber }}</td>
                   <td class="pl-code">{{ t.boxNumber }}</td>
-                  <td class="pl-num pl-sub">{{ t.availableQty | number: '1.0-3' }}</td>
+                  <td class="pl-num pl-sub">{{ t.availableQty | number: '1.0-3' }}
+                    <div *ngIf="t.fullBox"><span class="pl-badge pl-badge--open">Full box</span></div>
+                  </td>
                   <td class="pl-num pl-strong">{{ t.pickQty | number: '1.0-3' }}</td>
                   <td>{{ t.sourceDocNum }} / {{ t.sourceLineNum }}</td>
                   <td>{{ t.createdBy }}</td>
@@ -393,8 +407,10 @@
                   <th>Item Code</th>
                   <th>Item Name</th>
                   <th class="pl-num">Required</th>
+                  <th class="pl-num" title="Full-box quantity planned at generation">Planned</th>
                   <th class="pl-num">Picked</th>
                   <th class="pl-num">Remaining</th>
+                  <th class="pl-num">Excess</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -406,8 +422,10 @@
                   <td class="pl-code">{{ s.itemCode }}</td>
                   <td>{{ s.itemName }}</td>
                   <td class="pl-num">{{ s.requestedQty | number: '1.0-3' }}</td>
+                  <td class="pl-num pl-sub">{{ s.plannedQty !== null ? (s.plannedQty | number: '1.0-3') : '—' }}</td>
                   <td class="pl-num">{{ s.pickedQty | number: '1.0-3' }}</td>
                   <td class="pl-num pl-strong">{{ s.remainingQty | number: '1.0-3' }}</td>
+                  <td class="pl-num" [class.pl-warn-text]="s.excessQty > 0">{{ s.excessQty > 0 ? '+' + (s.excessQty | number: '1.0-3') : '—' }}</td>
                   <td><span class="pl-item-state" [ngClass]="s.status === 'PICKED' ? 'pl-item-state--done' : s.status === 'PARTIAL' ? 'pl-item-state--partial' : 'pl-item-state--pending'">{{ s.status }}</span></td>
                 </tr>
               </tbody>

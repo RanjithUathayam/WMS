@@ -82,8 +82,14 @@ export interface PickListLine {
   itemCode: string;
   itemName: string;
   requestedQty: number;
+  /** Full-box quantity planned at generation (required + whole-box excess); null on older Pick Lists. */
+  plannedQty: number | null;
+  /** Actual picked quantity — full boxes, so it can exceed requestedQty. */
   pickedQty: number;
+  /** max(requested − picked, 0). */
   remainingQty: number;
+  /** max(picked − requested, 0): extra quantity that came with full boxes. */
+  excessQty: number;
   fromWarehouse: string;
   toWarehouse: string;
   /** OPEN | PARTIAL | PICKED */
@@ -101,9 +107,11 @@ export interface PickTransaction {
   location: string;
   palletNumber: string;
   boxNumber: string;
-  /** Server-side available qty in the box at pick time, before deduction. */
+  /** Server-side available qty in the box at pick time, before deduction (the full box qty for full-box picks). */
   availableQty: number;
   pickQty: number;
+  /** Picked by Full Box Picking. */
+  fullBox: boolean;
   createdBy: string;
   createdDate: string;
 }
@@ -112,7 +120,10 @@ export interface DeliveryChallan {
   dcId: number;
   dcNumber: string;
   dcDate: string;
+  /** Actual picked quantity (full boxes), not the required quantity. */
   totalQty: number;
+  totalRequestedQty: number;
+  totalExcessQty: number;
   status: string;
 }
 
@@ -154,15 +165,30 @@ export interface PickListInventoryLine {
   inventory: InventoryPosition[];
 }
 
+/** A whole box the server suggests for what is still required. */
+export interface SuggestedBox {
+  inventoryId: number;
+  location: string;
+  palletNumber: string;
+  boxNumber: string;
+  boxQty: number;
+}
+
 export interface ItemSummary {
   itemCode: string;
   itemName: string;
   warehouse: string;
   requiredQty: number;
+  plannedQty: number;
   pickedQty: number;
   remainingQty: number;
+  excessQty: number;
   availableQty: number;
   shortageQty: number;
+  /** Full Box Picking suggestion for the remaining quantity. */
+  suggestedBoxes: SuggestedBox[];
+  suggestedPickQty: number;
+  suggestedExcessQty: number;
 }
 
 export interface PickListInventory {
@@ -193,46 +219,75 @@ export interface ScannedStock {
   boxNumber: string;
   pickableQty: number;
   remainingRequiredQty: number;
+  /** The whole quantity of this item in the box — what a full-box pick takes. */
+  fullBoxQty: number;
   suggestedPickQty: number;
+  /** fullBoxQty beyond what is still required. */
+  excessQty: number;
+  /** False when the box also holds items not on this Pick List (it cannot be picked whole). */
+  fullBoxPickable: boolean;
+  /** How the full box quantity is split over the source lines (box scan only). */
+  allocations: BoxAllocation[];
   pickListLines: ScanLineRef[];
+}
+
+export interface BoxAllocation {
+  pickListDetailId: number;
+  sourceDocNum: number;
+  sourceLineNum: number;
+  qty: number;
+  excessQty: number;
 }
 
 export interface PalletScan {
   palletNumber: string;
   locations: string[];
   boxNumbers: string[];
+  /** Boxes that also hold items not on this Pick List — they cannot be picked whole. */
+  blockedBoxNumbers: string[];
   items: ScannedStock[];
 }
 
+/** POST /pick/box — server preview of a full-box pick (same rules as POST /pick). */
 export interface BoxScan {
   palletNumber: string;
   boxNumber: string;
+  warehouse: string;
+  location: string;
+  totalBoxQty: number;
+  /** Part of the box that covers still-required quantity. */
+  totalRequiredQty: number;
+  totalExcessQty: number;
   items: ScannedStock[];
 }
 
 // ------------------------------------------------------------ POST /pick, /picklist/:id/complete
 
+/** Full Box Picking: no item / quantity — the server picks the whole box. */
 export interface SavePickRequest {
   pickListId: number;
-  pickListDetailId: number;
-  itemCode: string;
   palletNumber: string;
   boxNumber: string;
   location: string;
-  pickQty: number;
+  /** Box quantity the operator confirmed; the server rejects the pick (BOX_QTY_CHANGED) if the box changed. */
+  confirmedBoxQty: number;
   clientRequestId: string;
 }
 
-export interface SavedPick {
-  pickTransactionId: number;
-  pickListDetailId: number;
+export interface SavedPickItem {
   itemCode: string;
-  pickQty: number;
-  pickedQty: number;
-  remainingQty: number;
+  boxQty: number;
+  excessQty: number;
+}
+
+export interface SavedPick {
+  boxNumber: string;
+  boxQty: number;
+  excessQty: number;
+  items: SavedPickItem[];
   pickListStatus: PickListStatus | null;
-  /** Qty left in the box after this pick; null on a duplicate replay. */
-  inventoryRemainingQty: number | null;
+  /** Excess warning from the server, or null. */
+  warning: string | null;
   duplicate: boolean;
 }
 
@@ -240,9 +295,30 @@ export interface CompletionResult {
   pickListNumber: string;
   status: PickListStatus;
   dcNumber: string | null;
+  dcQty: number | null;
+  requiredQty: number | null;
+  pickedQty: number | null;
+  excessQty: number;
   stockTransferDocEntry: number | null;
   stockTransferNumber: string | null;
   alreadyCompleted: boolean;
+}
+
+/** POST /picklist — full box plan per item, returned with the created header. */
+export interface BoxPlanItem {
+  itemCode: string;
+  itemName: string;
+  requiredQty: number;
+  plannedQty: number;
+  excessQty: number;
+  shortageQty: number;
+  boxes: { palletNumber: string; boxNumber: string; location: string; boxQty: number }[];
+}
+
+export interface CreatedPickList extends PickListHeader {
+  totalPlannedQty: number;
+  boxPlan: BoxPlanItem[];
+  warnings: string[];
 }
 
 /** Normalised error surfaced to the UI. `data` carries extra detail such as PICKING_INCOMPLETE.pendingLines. */

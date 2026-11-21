@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AppComponent } from '../app.component';
-import { PickListHeader, PickListStatus, TransferRequestDocument, TransferRequestLine } from './pick-list.models';
+import { CreatedPickList, PickListHeader, PickListStatus, TransferRequestDocument, TransferRequestLine } from './pick-list.models';
 import { PickListService } from './pick-list.service';
 
 interface RequestDocGroup extends TransferRequestDocument {
@@ -241,7 +241,9 @@ export class PickListComponent implements OnInit {
       title: 'Generate Pick List?',
       html: `<p>${docs.length} document(s), ${this.selectedLineCount} line(s), ${this.combinedItems.length} item(s), total qty <b>${this.combinedTotalQty}</b></p>`
         + `<p>Source DocNum(s): <b>${this.escape(docList)}</b></p>`
-        + '<p style="font-size:0.85em;color:#64748b">Each line takes its remaining open quantity that is not already on another Pick List.</p>',
+        + '<p style="font-size:0.85em;color:#64748b">Each line takes its remaining open quantity that is not already on another Pick List.</p>'
+        + '<p style="font-size:0.85em;color:#64748b"><b>Full box picking:</b> whole boxes are planned and picked, so the picked quantity '
+        + 'can exceed the required quantity (e.g. 10 required, box of 25 → 25 picked). DC and Stock Transfer use the picked quantity.</p>',
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#016DB0',
@@ -259,9 +261,10 @@ export class PickListComponent implements OnInit {
           this.isGenerating = false;
           this.selection.clear();
           Swal.fire({
-            icon: 'success',
+            icon: header.warnings.length ? 'warning' : 'success',
             title: 'Pick List generated',
-            html: `Pick List No: <b>${this.escape(header.pickListNumber)}</b>`,
+            html: `Pick List No: <b>${this.escape(header.pickListNumber)}</b>` + this.boxPlanHtml(header),
+            width: header.boxPlan.length ? 720 : undefined,
             confirmButtonColor: '#016DB0',
             confirmButtonText: 'Open Pick List'
           }).then(() => this.openPickList(header.pickListId));
@@ -321,6 +324,30 @@ export class PickListComponent implements OnInit {
 
   trackByDoc(_: number, doc: RequestDocGroup) {
     return doc.docEntry;
+  }
+
+  /** Full box plan returned by POST /picklist: per item, required vs. whole-box quantity and the boxes to take. */
+  private boxPlanHtml(created: CreatedPickList): string {
+    if (!created.boxPlan.length) {
+      return '';
+    }
+    const cell = 'padding:4px 8px;border-bottom:1px solid #e2e8f0;';
+    const num = cell + 'text-align:right;';
+    const rows = created.boxPlan.map(p => {
+      const boxes = p.boxes.map(b => `${this.escape(b.boxNumber)} (${b.boxQty})`).join(', ') || '—';
+      const note = p.shortageQty > 0 ? `<span style="color:#b91c1c">short ${p.shortageQty}</span>`
+        : p.excessQty > 0 ? `<span style="color:#b45309">+${p.excessQty} excess</span>` : '';
+      return `<tr><td style="${cell}font-family:monospace">${this.escape(p.itemCode)}</td>`
+        + `<td style="${num}">${p.requiredQty}</td><td style="${num}"><b>${p.plannedQty}</b></td>`
+        + `<td style="${cell}">${note}</td><td style="${cell}font-size:0.85em">${boxes}</td></tr>`;
+    }).join('');
+    const th = 'padding:4px 8px;text-align:left;border-bottom:2px solid #cbd5e1;';
+    return '<p style="margin:12px 0 6px;font-size:0.9em">Full box plan — planned quantity '
+      + `<b>${created.totalPlannedQty}</b> (required ${created.totalRequestedQty})</p>`
+      + '<div style="max-height:260px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:0.85em">'
+      + `<thead><tr><th style="${th}">Item</th><th style="${th}text-align:right">Required</th>`
+      + `<th style="${th}text-align:right">Full box qty</th><th style="${th}"></th><th style="${th}">Boxes</th></tr></thead>`
+      + `<tbody>${rows}</tbody></table></div>`;
   }
 
   private escape(value: string): string {

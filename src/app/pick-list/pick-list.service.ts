@@ -7,6 +7,7 @@ import { ApiService } from '../service/api.service';
 import {
   BoxScan,
   CompletionResult,
+  CreatedPickList,
   PalletScan,
   PickListDetail,
   PickListError,
@@ -45,6 +46,11 @@ export class PickListService {
   /** Used when the backend sends no message (it normally does, with specifics such as quantities). */
   private static readonly ERROR_MESSAGES: { [code: string]: string } = {
     INSUFFICIENT_STOCK: 'Insufficient stock is available.',
+    BOX_ALREADY_PICKED: 'This box has already been picked.',
+    BOX_HAS_UNLISTED_ITEMS: 'This box also contains items that are not on the Pick List. Only full boxes can be picked — use another box.',
+    BOX_PARTIALLY_ALLOCATED: 'Part of this box is allocated elsewhere, so it cannot be picked as a full box.',
+    BOX_QTY_CHANGED: 'The box quantity changed since it was scanned. Scan the box again.',
+    PARTIAL_BOX_NOT_ALLOWED: 'Partial box picking is not allowed. The whole box must be picked.',
     PALLET_NOT_FOUND: 'Invalid pallet. The scanned pallet does not exist.',
     PALLET_NOT_AVAILABLE: 'This pallet is not available for picking.',
     PALLET_NOT_APPLICABLE: 'This pallet does not hold any item required by the Pick List.',
@@ -116,9 +122,30 @@ export class PickListService {
     })));
   }
 
-  /** The server decides line quantities (each line's unreserved open qty); we only name the documents. */
-  createPickList(documents: { docEntry: number; docNum: number }[]): Observable<PickListHeader> {
-    return this.post('/picklist', { documents }).pipe(map(d => this.toHeader(d)));
+  /**
+   * The server decides line quantities (each line's unreserved open qty) and the full box plan
+   * (whole boxes covering the required qty); we only name the documents.
+   */
+  createPickList(documents: { docEntry: number; docNum: number }[]): Observable<CreatedPickList> {
+    return this.post('/picklist', { documents }).pipe(map(d => ({
+      ...this.toHeader(d),
+      totalPlannedQty: this.num(d?.totalPlannedQty),
+      boxPlan: this.arr(d?.boxPlan).map(p => ({
+        itemCode: this.str(p.itemCode),
+        itemName: this.str(p.itemName),
+        requiredQty: this.num(p.requiredQty),
+        plannedQty: this.num(p.plannedQty),
+        excessQty: this.num(p.excessQty),
+        shortageQty: this.num(p.shortageQty),
+        boxes: this.arr(p.boxes).map(b => ({
+          palletNumber: this.str(b.palletNumber),
+          boxNumber: this.str(b.boxNumber),
+          location: this.str(b.location),
+          boxQty: this.num(b.boxQty)
+        }))
+      })),
+      warnings: this.arr(d?.warnings).map(String)
+    })));
   }
 
   getPickLists(status?: PickListStatus | '', limit = 200): Observable<PickListHeader[]> {
@@ -154,6 +181,7 @@ export class PickListService {
           boxNumber: this.str(t.boxNumber),
           availableQty: this.num(t.availableQty),
           pickQty: this.num(t.pickQty),
+          fullBox: !!t.fullBox,
           createdBy: this.str(t.createdBy),
           createdDate: this.str(t.createdDate)
         })),
@@ -162,6 +190,8 @@ export class PickListService {
           dcNumber: this.str(d.dc.dcNumber),
           dcDate: this.str(d.dc.dcDate),
           totalQty: this.num(d.dc.totalQty),
+          totalRequestedQty: this.num(d.dc.totalRequestedQty),
+          totalExcessQty: this.num(d.dc.totalExcessQty),
           status: this.str(d.dc.status)
         } : null,
         processLog: this.arr(d?.processLog).map(l => ({
@@ -199,10 +229,21 @@ export class PickListService {
         itemName: this.str(s.itemName),
         warehouse: this.str(s.warehouse),
         requiredQty: this.num(s.requiredQty),
+        plannedQty: this.num(s.plannedQty),
         pickedQty: this.num(s.pickedQty),
         remainingQty: this.num(s.remainingQty),
+        excessQty: this.num(s.excessQty),
         availableQty: this.num(s.availableQty),
-        shortageQty: this.num(s.shortageQty)
+        shortageQty: this.num(s.shortageQty),
+        suggestedBoxes: this.arr(s.suggestedBoxes).map(b => ({
+          inventoryId: this.num(b.inventoryId),
+          location: this.str(b.location),
+          palletNumber: this.str(b.palletNumber),
+          boxNumber: this.str(b.boxNumber),
+          boxQty: this.num(b.boxQty)
+        })),
+        suggestedPickQty: this.num(s.suggestedPickQty),
+        suggestedExcessQty: this.num(s.suggestedExcessQty)
       }))
     })));
   }
@@ -212,29 +253,41 @@ export class PickListService {
       palletNumber: this.str(d?.palletNumber),
       locations: this.arr(d?.locations).map(String),
       boxNumbers: this.arr(d?.boxNumbers).map(String),
+      blockedBoxNumbers: this.arr(d?.blockedBoxNumbers).map(String),
       items: this.arr(d?.items).map(i => this.toScannedStock(i))
     })));
   }
 
+  /** Full box preview: the server applies the same rules as POST /pick (whole box, nothing unlisted, not picked yet). */
   scanBox(pickListId: number, palletNumber: string, boxNumber: string): Observable<BoxScan> {
     return this.post('/pick/box', { pickListId, palletNumber, boxNumber }).pipe(map(d => ({
       palletNumber: this.str(d?.palletNumber),
       boxNumber: this.str(d?.boxNumber),
+      warehouse: this.str(d?.warehouse),
+      location: this.str(d?.location),
+      totalBoxQty: this.num(d?.totalBoxQty),
+      totalRequiredQty: this.num(d?.totalRequiredQty),
+      totalExcessQty: this.num(d?.totalExcessQty),
       items: this.arr(d?.items).map(i => this.toScannedStock(i))
     })));
   }
 
-  /** A repeated clientRequestId returns the original pick with duplicate: true instead of picking twice. */
+  /**
+   * Full Box Picking: the whole box is picked; no item / quantity is sent.
+   * A repeated clientRequestId returns the original pick with duplicate: true instead of picking twice.
+   */
   savePick(request: SavePickRequest): Observable<SavedPick> {
     return this.post('/pick', request).pipe(map(d => ({
-      pickTransactionId: this.num(d?.pickTransactionId),
-      pickListDetailId: this.num(d?.pickListDetailId),
-      itemCode: this.str(d?.itemCode),
-      pickQty: this.num(d?.pickQty),
-      pickedQty: this.num(d?.pickedQty),
-      remainingQty: this.num(d?.remainingQty),
+      boxNumber: this.str(d?.boxNumber),
+      boxQty: this.num(d?.boxQty ?? d?.pickQty),
+      excessQty: this.num(d?.excessQty),
+      items: this.arr(d?.items).map(i => ({
+        itemCode: this.str(i.itemCode),
+        boxQty: this.num(i.boxQty),
+        excessQty: this.num(i.excessQty)
+      })),
       pickListStatus: d?.pickListStatus || null,
-      inventoryRemainingQty: d?.inventoryRemainingQty !== undefined && d?.inventoryRemainingQty !== null ? Number(d.inventoryRemainingQty) : null,
+      warning: this.optStr(d?.warning),
       duplicate: !!d?.duplicate
     })));
   }
@@ -245,6 +298,10 @@ export class PickListService {
       pickListNumber: this.str(d?.pickListNumber),
       status: d?.status as PickListStatus,
       dcNumber: this.optStr(d?.dcNumber),
+      dcQty: d?.dcQty !== undefined && d?.dcQty !== null ? Number(d.dcQty) : null,
+      requiredQty: d?.requiredQty !== undefined && d?.requiredQty !== null ? Number(d.requiredQty) : null,
+      pickedQty: d?.pickedQty !== undefined && d?.pickedQty !== null ? Number(d.pickedQty) : null,
+      excessQty: this.num(d?.excessQty),
       stockTransferDocEntry: d?.stockTransferDocEntry ?? null,
       stockTransferNumber: this.optStr(d?.stockTransferNumber),
       alreadyCompleted: !!d?.alreadyCompleted
@@ -352,8 +409,10 @@ export class PickListService {
       itemCode: this.str(d.itemCode),
       itemName: this.str(d.itemName),
       requestedQty: this.num(d.requestedQty),
+      plannedQty: d.plannedQty !== undefined && d.plannedQty !== null ? Number(d.plannedQty) : null,
       pickedQty: this.num(d.pickedQty),
       remainingQty: this.num(d.remainingQty),
+      excessQty: this.num(d.excessQty ?? Math.max(this.num(d.pickedQty) - this.num(d.requestedQty), 0)),
       fromWarehouse: this.str(d.fromWarehouse),
       toWarehouse: this.str(d.toWarehouse),
       status: this.str(d.status)
@@ -371,7 +430,17 @@ export class PickListService {
       boxNumber: this.str(i.boxNumber),
       pickableQty: this.num(i.pickableQty),
       remainingRequiredQty: this.num(i.remainingRequiredQty),
+      fullBoxQty: this.num(i.fullBoxQty ?? i.pickableQty),
       suggestedPickQty: this.num(i.suggestedPickQty),
+      excessQty: this.num(i.excessQty),
+      fullBoxPickable: i.fullBoxPickable !== false,
+      allocations: this.arr(i.allocations).map(a => ({
+        pickListDetailId: this.num(a.pickListDetailId),
+        sourceDocNum: this.num(a.sourceDocNum),
+        sourceLineNum: this.num(a.sourceLineNum),
+        qty: this.num(a.qty),
+        excessQty: this.num(a.excessQty)
+      })),
       pickListLines: this.arr(i.pickListLines).map(l => ({
         pickListDetailId: this.num(l.pickListDetailId),
         sourceDocEntry: this.num(l.sourceDocEntry),

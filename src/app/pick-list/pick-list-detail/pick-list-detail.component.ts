@@ -10,12 +10,13 @@ import {
   PickListError,
   PickListInventory,
   PickListLine,
-  ScanLineRef,
-  ScannedStock
+  ScannedStock,
+  SuggestedBox
 } from '../pick-list.models';
 import { PickListService } from '../pick-list.service';
 
-type ScanStage = 'pallet' | 'box' | 'item' | 'qty';
+/** Full Box Picking: 1. Pallet → 2. Box → 3. Confirm the whole box. The operator never enters a quantity. */
+type ScanStage = 'pallet' | 'box' | 'confirm';
 type BottomTab = 'transactions' | 'sources' | 'log';
 
 /** Item-level view: the same item can be on several Pick List lines (one per source STR line). */
@@ -23,8 +24,11 @@ interface ItemRow {
   itemCode: string;
   itemName: string;
   requiredQty: number;
+  plannedQty: number;
   pickedQty: number;
   remainingQty: number;
+  /** Picked beyond the requirement because boxes are picked whole. */
+  excessQty: number;
   availableQty: number;
   shortageQty: number;
   warehouse: string;
@@ -32,6 +36,10 @@ interface ItemRow {
   pallets: string[];
   boxes: string[];
   positions: InventoryPosition[];
+  /** Whole boxes the server suggests for what is still required. */
+  suggestedBoxes: SuggestedBox[];
+  suggestedPickQty: number;
+  suggestedExcessQty: number;
   lines: PickListLine[];
 }
 
@@ -42,8 +50,8 @@ const COMPLETABLE_STATUSES = ['OPEN', 'IN_PROGRESS', 'PICKED', 'DC_CREATED'];
 
 /** Error codes after which the on-screen quantities are probably stale and must be reloaded. */
 const STALE_DATA_CODES = [
-  'INSUFFICIENT_STOCK', 'PICK_QTY_EXCEEDS_REMAINING', 'LINE_ALREADY_PICKED', 'LOCATION_MISMATCH',
-  'WAREHOUSE_MISMATCH', 'PICKLIST_CLOSED', 'PICKLIST_CANCELLED', 'BOX_NOT_APPLICABLE', 'PALLET_NOT_AVAILABLE'
+  'INSUFFICIENT_STOCK', 'LINE_ALREADY_PICKED', 'LOCATION_MISMATCH', 'WAREHOUSE_MISMATCH', 'PICKLIST_CLOSED',
+  'PICKLIST_CANCELLED', 'BOX_NOT_APPLICABLE', 'PALLET_NOT_AVAILABLE', 'BOX_ALREADY_PICKED', 'BOX_QTY_CHANGED'
 ];
 
 @Component({
@@ -52,10 +60,9 @@ const STALE_DATA_CODES = [
   styleUrls: ['../pick-list.shared.css', './pick-list-detail.component.css']
 })
 export class PickListDetailComponent implements OnInit, OnDestroy {
-  @ViewChild('itemInput') itemInput?: ElementRef<HTMLInputElement>;
   @ViewChild('palletInput') palletInput?: ElementRef<HTMLInputElement>;
   @ViewChild('boxInput') boxInput?: ElementRef<HTMLInputElement>;
-  @ViewChild('qtyInput') qtyInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('confirmButton') confirmButton?: ElementRef<HTMLButtonElement>;
 
   pickListId = 0;
   detail: PickListDetail | null = null;
@@ -71,17 +78,16 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
   selectedItemCode = '';
 
   // ---- Scan form
-  scan = { palletNumber: '', boxNumber: '', itemCode: '', pickQty: null as number | null };
+  scan = { palletNumber: '', boxNumber: '' };
   stage: ScanStage = 'pallet';
   palletScan: PalletScan | null = null;
-  /** Server-validated contents of the scanned box. */
+  /** Server preview of the full-box pick for the scanned box (same rules the save applies). */
   boxScan: BoxScan | null = null;
-  /** Server-validated stock for the scanned item in the scanned box. */
-  stock: ScannedStock | null = null;
-  selectedLineId: number | null = null;
   scanError: PickListError | null = null;
   scanNotice = '';
   lastPickMessage = '';
+  /** Excess warning of the last saved pick (full box gave more than required). */
+  lastPickWarning = '';
   isScanning = false;
   isSaving = false;
   /** Reused when retrying the same pick after a network error so the backend can de-duplicate it. */
@@ -181,15 +187,17 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
       let row = rows.get(key);
       if (!row) {
         row = {
-          itemCode: line.itemCode, itemName: line.itemName, requiredQty: 0, pickedQty: 0, remainingQty: 0,
-          availableQty: 0, shortageQty: 0, warehouse: line.fromWarehouse,
-          locations: [], pallets: [], boxes: [], positions: [], lines: []
+          itemCode: line.itemCode, itemName: line.itemName, requiredQty: 0, plannedQty: 0, pickedQty: 0, remainingQty: 0,
+          excessQty: 0, availableQty: 0, shortageQty: 0, warehouse: line.fromWarehouse,
+          locations: [], pallets: [], boxes: [], positions: [], suggestedBoxes: [], suggestedPickQty: 0, suggestedExcessQty: 0, lines: []
         };
         rows.set(key, row);
       }
       row.requiredQty += line.requestedQty;
+      row.plannedQty += line.plannedQty ?? line.requestedQty;
       row.pickedQty += line.pickedQty;
       row.remainingQty += line.remainingQty;
+      row.excessQty += line.excessQty;
       row.lines.push(line);
     }
 
@@ -197,6 +205,9 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
       const summary = this.inventory?.itemSummary.find(s => s.itemCode.toUpperCase() === row.itemCode.toUpperCase());
       row.availableQty = summary?.availableQty ?? 0;
       row.shortageQty = summary?.shortageQty ?? Math.max(row.remainingQty - row.availableQty, 0);
+      row.suggestedBoxes = row.remainingQty > 0 ? summary?.suggestedBoxes ?? [] : [];
+      row.suggestedPickQty = summary?.suggestedPickQty ?? 0;
+      row.suggestedExcessQty = summary?.suggestedExcessQty ?? 0;
       // Every line of the same item/warehouse lists the same stock — de-duplicate by inventory row.
       const positions = new Map<number, InventoryPosition>();
       this.inventory?.items
@@ -230,13 +241,18 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
     const required = lines.reduce((s, l) => s + l.requestedQty, 0);
     const picked = lines.reduce((s, l) => s + l.pickedQty, 0);
     const remaining = lines.reduce((s, l) => s + l.remainingQty, 0);
+    const excess = lines.reduce((s, l) => s + l.excessQty, 0);
+    // Progress counts only the part of the requirement that is covered — excess does not inflate it.
+    const covered = lines.reduce((s, l) => s + Math.min(l.pickedQty, l.requestedQty), 0);
     return {
       required,
+      planned: lines.reduce((s, l) => s + (l.plannedQty ?? l.requestedQty), 0),
       picked,
       remaining,
+      excess,
       itemCount: this.itemRows.length,
       pendingItems: this.itemRows.filter(i => i.remainingQty > 0).length,
-      progress: required > 0 ? Math.min(100, Math.round((picked / required) * 100)) : 0
+      progress: required > 0 ? Math.min(100, Math.round((covered / required) * 100)) : 0
     };
   }
 
@@ -252,21 +268,6 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
 
   get selectedItem(): ItemRow | undefined {
     return this.findItem(this.selectedItemCode);
-  }
-
-  get selectedLine(): ScanLineRef | undefined {
-    return this.stock?.pickListLines.find(l => l.pickListDetailId === this.selectedLineId);
-  }
-
-  get openLinesForStock(): ScanLineRef[] {
-    return (this.stock?.pickListLines || []).filter(l => l.remainingQty > 0);
-  }
-
-  get maxPickQty(): number {
-    if (!this.stock || !this.selectedLine) {
-      return 0;
-    }
-    return Math.min(this.stock.pickableQty, this.selectedLine.remainingQty);
   }
 
   itemState(item: ItemRow): 'done' | 'short' | 'partial' | 'pending' {
@@ -297,41 +298,43 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
       .reduce((s, t) => s + t.pickQty, 0);
   }
 
+  /** The server suggests this box (whole boxes covering the remaining quantity). */
+  isSuggestedBox(item: ItemRow, p: InventoryPosition): boolean {
+    return item.suggestedBoxes.some(b => b.inventoryId === p.inventoryId);
+  }
+
   // ================================================================ item selection
 
-  /** Clicking an item row shows its stock; if a box is already scanned, the item is picked from it. */
+  /** Clicking an item row shows its stock by location / pallet / box and the suggested full boxes. */
   selectItem(item: ItemRow) {
     this.selectedItemCode = item.itemCode;
     if (!this.isEditable) {
       return;
     }
     this.clearMessages();
-    this.lastPickMessage = '';
     if (item.remainingQty <= 0) {
       this.scanNotice = `${item.itemCode} is fully picked.`;
-    } else if (this.boxScan) {
-      this.selectBoxItem(item.itemCode);
-      return;
     }
     this.focusStage();
   }
 
-  /** "Pick" on a stock row — fills pallet/box, validates the box and selects the item with its full quantity. */
+  /** "Pick box" on a stock row — fills pallet/box and asks the server for the full-box preview. */
   pickFromPosition(item: ItemRow, position: InventoryPosition) {
     if (!this.isEditable || item.remainingQty <= 0) {
       return;
     }
     this.clearMessages();
     this.lastPickMessage = '';
+    this.lastPickWarning = '';
     this.selectedItemCode = item.itemCode;
     this.palletScan = null;
     this.scan.palletNumber = position.palletNumber;
     this.scan.boxNumber = position.boxNumber;
-    this.loadBox(false, item.itemCode);
+    this.loadBox();
   }
 
   // ================================================================ scanning
-  // Flow: 1. Pallet → 2. Box → 3. Item (each further scan of the same item adds 1) → 4. Qty → Save.
+  // Flow: 1. Pallet → 2. Box → 3. Confirm — the whole box is picked (Enter on the confirm button or Save).
 
   /** Step 1 — POST /pick/pallet: pallet exists, is pickable and holds an item this Pick List still needs. */
   onPalletScanned(silent = false) {
@@ -353,10 +356,13 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
           return; // re-scanned while in flight
         }
         if (!result.items.some(i => this.isNeeded(i))) {
+          const message = result.blockedBoxNumbers.length
+            ? `Pallet ${palletNumber}: the boxes with needed items (${result.blockedBoxNumbers.join(', ')}) also hold items not on this Pick List and cannot be picked whole.`
+            : `Pallet ${palletNumber} has no stock of any item still needed.`;
           if (silent) {
             this.scanNotice = `Pallet ${palletNumber} has nothing more for this Pick List. Scan the next pallet.`;
           } else {
-            this.scanError = { code: 'PALLET_NOT_NEEDED', message: `Pallet ${palletNumber} has no stock of any item still needed.`, data: null };
+            this.scanError = { code: 'PALLET_NOT_NEEDED', message, data: null };
           }
           this.scan.palletNumber = '';
           this.stage = 'pallet';
@@ -385,55 +391,48 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Boxes on the scanned pallet that hold an item still needed — a hint for the operator. */
+  /** Boxes on the scanned pallet that can be picked whole and hold an item still needed — a hint for the operator. */
   get boxHints(): string[] {
     return [...new Set((this.palletScan?.items || []).filter(i => this.isNeeded(i)).map(i => i.boxNumber))];
   }
 
-  /** Items in the scanned box that are still needed — a hint for the operator. */
-  get itemHints(): ScannedStock[] {
-    return (this.boxScan?.items || []).filter(i => this.isNeeded(i));
+  /** Boxes on the scanned pallet that hold needed items but also items not on the Pick List. */
+  get blockedBoxHints(): string[] {
+    return this.palletScan?.blockedBoxNumbers || [];
   }
 
   /**
-   * POST /pick/box: box exists, is on the pallet and holds a required item with stock.
-   * `presetItem` selects that item straight away (used by "Pick" on a stock row); `silent` is used after a save.
+   * POST /pick/box — server-side full-box preview: the whole box, every item in it, the excess, and how it is
+   * split over the source lines. Moves to the confirm step.
    */
-  loadBox(silent = false, presetItem = '') {
-    if (!silent) {
-      this.clearMessages();
-    }
+  loadBox() {
+    this.clearMessages();
     const { palletNumber, boxNumber } = this.scan;
     if (!palletNumber || !boxNumber || this.isScanning) {
       return;
     }
     this.isScanning = true;
-    this.clearItem();
     this.boxScan = null;
+    this.clientRequestId = '';
     this.pickListService.scanBox(this.pickListId, palletNumber, boxNumber).subscribe({
       next: result => {
         this.isScanning = false;
         if (this.scan.palletNumber !== palletNumber || this.scan.boxNumber !== boxNumber) {
           return;
         }
-        if (!result.items.some(i => this.isNeeded(i))) {
-          this.onBoxExhausted(silent, boxNumber);
-          return;
-        }
         this.boxScan = result;
-        this.stage = 'item';
-        if (presetItem) {
-          this.selectBoxItem(presetItem, true);
-        } else {
-          this.focusStage();
+        this.clientRequestId = this.pickListService.newRequestId();
+        this.stage = 'confirm';
+        const already = result.items
+          .map(i => ({ code: i.itemCode, qty: this.pickedFromBox(i.itemCode, result.palletNumber, result.boxNumber) }))
+          .filter(x => x.qty > 0);
+        if (already.length) {
+          this.scanNotice = `Already picked from box ${boxNumber} on this Pick List: ${already.map(x => `${x.qty} ${x.code}`).join(', ')}.`;
         }
+        this.focusStage();
       },
       error: (err: PickListError) => {
         this.isScanning = false;
-        if (silent && err.code === 'INSUFFICIENT_STOCK') {
-          this.onBoxExhausted(true, boxNumber);
-          return;
-        }
         this.scanError = err;
         if (err.code.startsWith('PALLET_')) {
           this.scan.palletNumber = '';
@@ -449,150 +448,24 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** The box has nothing more this Pick List needs: after a save move on quietly, otherwise report it. */
-  private onBoxExhausted(silent: boolean, boxNumber: string) {
-    this.clearBox();
-    if (!silent) {
-      this.scanError = { code: 'BOX_NOT_NEEDED', message: `Box ${boxNumber} has no item still needed on this Pick List.`, data: null };
-      this.stage = 'box';
-      this.focusStage();
-      return;
-    }
-    this.scanNotice = `Box ${boxNumber} is done. Scan the next box.`;
-    // Refresh the pallet so the box hints only list boxes that still hold something needed.
-    this.onPalletScanned(true);
-  }
-
-  /** Step 3 — the item. Scanning the item that is already selected adds 1 to the pick quantity. */
-  onItemScanned() {
-    const code = this.scan.itemCode.trim();
-    if (!code) {
-      return;
-    }
-    if (this.stock && this.sameCode(code, this.stock.itemCode)) {
-      this.scan.itemCode = this.stock.itemCode;
-      this.changeQty(1);
-      this.focusStage('item');
-      return;
-    }
-    this.selectBoxItem(code);
-  }
-
-  /** UX shortcut only; /pick re-checks item, box and quantities on the server. */
-  private selectBoxItem(code: string, fillMax = false) {
-    this.clearMessages();
-    const unsaved = this.stock && Number(this.scan.pickQty) > 0 ? this.stock.itemCode : '';
-    const item = this.findItem(code);
-    const fail = (errorCode: string, message: string) => {
-      this.scanError = { code: errorCode, message, data: null };
-      this.scan.itemCode = this.stock?.itemCode || '';
-      this.focusStage('item');
-    };
-    if (!item) {
-      return fail('ITEM_NOT_IN_PICKLIST', `Item ${code} does not belong to this Pick List.`);
-    }
-    if (item.remainingQty <= 0) {
-      return fail('LINE_ALREADY_PICKED', `Item ${item.itemCode} is already fully picked.`);
-    }
-    const stock = this.boxScan?.items.find(i => this.sameCode(i.itemCode, item.itemCode) && this.isNeeded(i));
-    if (!stock) {
-      return fail('ITEM_NOT_IN_BOX', `Item ${item.itemCode} is not available in box ${this.scan.boxNumber}.`);
-    }
-
-    this.stock = stock;
-    this.clientRequestId = this.pickListService.newRequestId();
-    this.selectedLineId = stock.pickListLines.find(l => l.remainingQty > 0)?.pickListDetailId ?? null;
-    this.scan.itemCode = stock.itemCode;
-    this.selectedItemCode = stock.itemCode;
-    this.scan.pickQty = fillMax ? this.maxPickQty : Math.min(1, this.maxPickQty);
-    this.stage = 'qty';
-
-    if (unsaved && !this.sameCode(unsaved, stock.itemCode)) {
-      this.scanNotice = `Switched from ${unsaved} (not saved) to ${stock.itemCode}.`;
-    } else {
-      const already = this.pickedFromBox(stock.itemCode, stock.palletNumber, stock.boxNumber);
-      if (already > 0) {
-        this.scanNotice = `${already} of ${stock.itemCode} was already picked from box ${stock.boxNumber} on this Pick List.`;
-      }
-    }
-    // Keep the scanner on the item field so the next scan of the same item adds 1.
-    this.focusStage(fillMax ? 'qty' : 'item');
-  }
-
-  /** Step 4 — adjust the pick quantity (item re-scan, +/- buttons). */
-  changeQty(delta: number) {
-    if (!this.stock) {
-      return;
-    }
-    const max = this.maxPickQty;
-    const next = (Number(this.scan.pickQty) || 0) + delta;
-    if (next > max) {
-      this.scan.pickQty = max;
-      this.scanNotice = `Maximum reached: ${max} (${this.stock.pickableQty < (this.selectedLine?.remainingQty || 0) ? 'box stock' : 'still required'}).`;
-      return;
-    }
-    this.scanNotice = '';
-    this.scan.pickQty = Math.max(next, Math.min(1, max));
-  }
-
-  setMaxQty() {
-    if (this.stock) {
-      this.scan.pickQty = this.maxPickQty;
-      this.scanNotice = '';
-    }
-  }
-
-  onItemFocus() {
-    if (!this.stock) {
-      this.stage = 'item';
-    }
-  }
-
-  onLineChange() {
-    const qty = Number(this.scan.pickQty) || 1;
-    this.scan.pickQty = Math.min(qty, this.maxPickQty);
-    this.clientRequestId = this.pickListService.newRequestId();
-  }
-
-  /** UX-only check — the backend performs the authoritative validation. */
-  get qtyError(): string {
-    if (!this.stock || !this.selectedLine || this.scan.pickQty === null || String(this.scan.pickQty) === '') {
-      return '';
-    }
-    const qty = Number(this.scan.pickQty);
-    if (!Number.isFinite(qty) || qty <= 0) {
-      return 'Enter a quantity greater than 0.';
-    }
-    if (qty > this.stock.pickableQty) {
-      return `Quantity exceeds available stock (${this.stock.pickableQty}).`;
-    }
-    if (qty > this.selectedLine.remainingQty) {
-      return `Quantity exceeds Pick List requirement (${this.selectedLine.remainingQty} remaining on DocNum ${this.selectedLine.sourceDocNum}).`;
-    }
-    return '';
-  }
-
   get canSavePick(): boolean {
-    return this.isEditable && !!this.stock && !!this.selectedLine && !this.isSaving && !this.isScanning
-      && this.scan.pickQty !== null && Number(this.scan.pickQty) > 0 && !this.qtyError;
+    return this.isEditable && !!this.boxScan && this.boxScan.totalBoxQty > 0 && !this.isSaving && !this.isScanning;
   }
 
-  /** POST /pick. */
+  /** POST /pick — picks the whole box. No item / quantity is sent; the server reads them under lock. */
   savePick() {
-    if (!this.canSavePick || !this.stock || !this.selectedLine) {
+    if (!this.canSavePick || !this.boxScan) {
       return;
     }
     this.clearMessages();
     this.isSaving = true;
-    const line = this.selectedLine;
+    const box = this.boxScan;
     const request = {
       pickListId: this.pickListId,
-      pickListDetailId: line.pickListDetailId,
-      itemCode: this.stock.itemCode,
-      palletNumber: this.stock.palletNumber || this.scan.palletNumber,
-      boxNumber: this.stock.boxNumber || this.scan.boxNumber,
-      location: this.stock.locationCode,
-      pickQty: Number(this.scan.pickQty),
+      palletNumber: box.palletNumber || this.scan.palletNumber,
+      boxNumber: box.boxNumber || this.scan.boxNumber,
+      location: box.location,
+      confirmedBoxQty: box.totalBoxQty,
       clientRequestId: this.clientRequestId || this.pickListService.newRequestId()
     };
     this.clientRequestId = request.clientRequestId;
@@ -601,9 +474,13 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
       next: saved => {
         this.isSaving = false;
         this.clientRequestId = '';
+        const items = saved.items.length
+          ? saved.items.map(i => `${i.boxQty} × ${i.itemCode}`).join(', ')
+          : `${saved.boxQty}`;
         this.lastPickMessage = saved.duplicate
-          ? 'This pick was already saved.'
-          : `Picked ${request.pickQty} × ${request.itemCode} from ${request.palletNumber} / ${request.boxNumber} for DocNum ${line.sourceDocNum} line ${line.sourceLineNum}.`;
+          ? `Box ${request.boxNumber} was already saved.`
+          : `Full box ${request.boxNumber} picked from ${request.palletNumber}: ${items}.`;
+        this.lastPickWarning = saved.duplicate ? '' : (saved.warning || '');
         this.afterPickSaved();
       },
       error: (err: PickListError) => {
@@ -623,36 +500,37 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Refreshes quantities in place and stays on the same box for the next item, or moves to the next box / pallet. */
+  /** Refreshes quantities and moves on to the next box of the same pallet (or the next pallet). */
   private afterPickSaved() {
+    this.clearBox();
     this.loadAll(() => {
       if (!this.isEditable || this.allPicked) {
         this.resetScan();
         return;
       }
-      this.clearItem();
-      this.loadBox(true);
+      this.stage = 'box';
+      // Refresh the pallet so the box hints only list boxes that still hold something needed.
+      this.onPalletScanned(true);
     });
   }
 
-  /** Clears the item and quantity (steps 3–4). */
-  private clearItem() {
-    this.scan.itemCode = '';
-    this.scan.pickQty = null;
-    this.stock = null;
-    this.selectedLineId = null;
-    this.clientRequestId = '';
-  }
-
-  /** Clears the box and everything after it (steps 2–4). */
+  /** Clears the box and the preview (steps 2–3). */
   private clearBox() {
     this.scan.boxNumber = '';
     this.boxScan = null;
-    this.clearItem();
+    this.clientRequestId = '';
+  }
+
+  /** Back from the confirm step to scanning another box on the same pallet. */
+  cancelBox() {
+    this.clearMessages();
+    this.clearBox();
+    this.stage = this.scan.palletNumber ? 'box' : 'pallet';
+    this.focusStage();
   }
 
   resetScan() {
-    this.scan = { palletNumber: '', boxNumber: '', itemCode: '', pickQty: null };
+    this.scan = { palletNumber: '', boxNumber: '' };
     this.palletScan = null;
     this.clearBox();
     this.stage = 'pallet';
@@ -663,6 +541,7 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
   cancelScan() {
     this.resetScan();
     this.lastPickMessage = '';
+    this.lastPickWarning = '';
     this.focusStage();
   }
 
@@ -671,9 +550,9 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
     this.scanNotice = '';
   }
 
-  /** Stock row that an open Pick List line can still use. */
+  /** Stock row that an open Pick List line can still use, in a box that can be picked whole. */
   private isNeeded(stock: ScannedStock): boolean {
-    return stock.pickableQty > 0 && stock.pickListLines.some(l => l.remainingQty > 0);
+    return stock.pickableQty > 0 && stock.fullBoxPickable && stock.pickListLines.some(l => l.remainingQty > 0);
   }
 
   private sameCode(a: string, b: string): boolean {
@@ -686,7 +565,11 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
 
   focusStage(target: ScanStage = this.stage) {
     setTimeout(() => {
-      const input = { item: this.itemInput, pallet: this.palletInput, box: this.boxInput, qty: this.qtyInput }[target];
+      if (target === 'confirm') {
+        this.confirmButton?.nativeElement.focus();
+        return;
+      }
+      const input = { pallet: this.palletInput, box: this.boxInput }[target];
       input?.nativeElement.focus();
       input?.nativeElement.select();
     });
@@ -700,11 +583,18 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
     }
     this.completionError = null;
     const retry = this.isAwaitingPosting;
+    const t = this.totals;
+    const excessNote = t.excess > 0
+      ? `<p style="margin-top:10px;padding:8px;border-radius:6px;background:#fef3c7;color:#92400e;font-size:0.9em">`
+        + `<b>Full box picking picked more than required.</b><br>Required ${t.required}, picked <b>${t.picked}</b> `
+        + `(excess ${t.excess}). The DC and the Stock Transfer will use the picked quantity <b>${t.picked}</b>.</p>`
+      : '';
     Swal.fire({
       title: retry ? 'Retry completion?' : 'Complete Pick List?',
-      text: retry
+      html: (retry
         ? 'Picking is already complete. This retries DC and Stock Transfer generation from the step that failed.'
-        : 'Are you sure you want to complete this Pick List? After completion, DC and Stock Transfer will be generated automatically.',
+        : 'Are you sure you want to complete this Pick List? After completion, DC and Stock Transfer will be generated automatically.')
+        + excessNote,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#15803d',
@@ -720,11 +610,14 @@ export class PickListDetailComponent implements OnInit, OnDestroy {
         next: completion => {
           this.isCompleting = false;
           this.loadAll(); // the summary reflects exactly what the backend persisted
+          const qty = completion.dcQty ?? completion.pickedQty;
           Swal.fire({
             icon: 'success',
             title: completion.alreadyCompleted ? 'Pick List was already completed' : 'Pick List completed',
-            html: `DC No: <b>${this.escape(completion.dcNumber || '—')}</b><br>`
-              + `Stock Transfer No: <b>${this.escape(completion.stockTransferNumber || '—')}</b>`,
+            html: `DC No: <b>${this.escape(completion.dcNumber || '—')}</b>`
+              + (qty !== null ? ` · DC qty <b>${qty}</b>` : '') + '<br>'
+              + `Stock Transfer No: <b>${this.escape(completion.stockTransferNumber || '—')}</b>`
+              + (completion.excessQty > 0 ? `<br><span style="font-size:0.85em;color:#92400e">Includes ${completion.excessQty} full-box excess over the required ${completion.requiredQty}.</span>` : ''),
             confirmButtonColor: '#016DB0'
           });
         },
