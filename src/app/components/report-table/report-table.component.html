@@ -10,9 +10,9 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let row of rows; let i = index">
+      <tr *ngFor="let row of rows; let i = index" [class.clickable-row]="rowClickable" (click)="onRowClick(row)">
         <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-        <td *ngFor="let col of columns">{{ getValue(row, col.data) ?? '-' }}</td>
+        <td *ngFor="let col of columns" [class.link-cell]="rowClickable && col.link">{{ getValue(row, col.data) ?? '-' }}</td>
       </tr>
     </tbody>
   </table>

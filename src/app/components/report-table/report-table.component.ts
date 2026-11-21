@@ -5,6 +5,8 @@ export interface ReportColumn {
   data: string;
   sortable?: boolean;
   sum?: boolean;
+  /** Rendered as a link-styled cell when the table's rowClickable is on. */
+  link?: boolean;
 }
 
 @Component({
@@ -23,9 +25,16 @@ export class ReportTableComponent {
   @Input() sortBy: string = '';
   @Input() sortDir: string = 'ASC';
   @Input() totals: { [key: string]: number } = {};
+  /** Opt-in: when true, rows show a pointer and emit rowClick (used for drill-down reports). */
+  @Input() rowClickable: boolean = false;
 
   @Output() pageChange = new EventEmitter<number>();
   @Output() sortChange = new EventEmitter<{ sortBy: string, sortDir: string }>();
+  @Output() rowClick = new EventEmitter<any>();
+
+  onRowClick(row: any): void {
+    if (this.rowClickable) this.rowClick.emit(row);
+  }
 
   getValue(row: any, path: string): any {
     if (!path || row == null) return null;

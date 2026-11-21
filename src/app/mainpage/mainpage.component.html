@@ -102,6 +102,9 @@
           <button class="sidebar-link" type="button" *ngIf="menuRights.report_inventory_list" (click)="selectTab('inventory_details_report'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'inventory_details_report' }">
             <i class="fa fa-cubes mr-2"></i>Inventory Details Report
           </button>
+          <button class="sidebar-link" type="button" *ngIf="menuRights.report_inventory_list" (click)="selectTab('warehouse_stock_report'); closeMobileSidebar()" [ngClass]="{ 'is-selected': selectedTab === 'warehouse_stock_report' }">
+            <i class="fa fa-archive mr-2"></i>Warehouse Stock Report
+          </button>
         </div>
       </div>
 

@@ -22,6 +22,7 @@ import { PreBinningReportComponent } from './pre-binning-report/pre-binning-repo
 import { PalletMappingReportComponent } from './pallet-mapping-report/pallet-mapping-report.component';
 import { LocationMappingReportComponent } from './location-mapping-report/location-mapping-report.component';
 import { InventoryDetailsReportComponent } from './inventory-details-report/inventory-details-report.component';
+import { WarehouseStockReportComponent } from './warehouse-stock-report/warehouse-stock-report.component';
 import { PickListComponent } from './pick-list/pick-list.component';
 import { PickListDetailComponent } from './pick-list/pick-list-detail/pick-list-detail.component';
 
@@ -51,6 +52,7 @@ const routes: Routes = [
         { path: 'pallet_mapping_report', component: PalletMappingReportComponent },
         { path: 'location_mapping_report', component: LocationMappingReportComponent },
         { path: 'inventory_details_report', component: InventoryDetailsReportComponent },
+        { path: 'warehouse_stock_report', component: WarehouseStockReportComponent },
     ]
   }
 

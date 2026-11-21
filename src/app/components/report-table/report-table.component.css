@@ -63,6 +63,20 @@ tbody tr:hover {
     background: rgba(1, 141, 176, 0.08);
 }
 
+tbody tr.clickable-row {
+    cursor: pointer;
+}
+
+tbody tr.clickable-row:hover {
+    background: rgba(1, 141, 176, 0.16);
+}
+
+.link-cell {
+    color: var(--report-primary);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
 .table-container::-webkit-scrollbar {
     height: 8px;
     width: 8px !important;

@@ -1,0 +1,128 @@
+<section>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="px-4 pt-2">
+          <app-report-toolbar [searchValue]="searchTerm" [activeFilterCount]="activeFilterCount"
+            searchPlaceholder="Search: Warehouse, Item Code, Item Name, Group, Category, Color, Size..."
+            (searchChange)="onSearchChange($event)" (filterClick)="openSidebar()"
+            (exportClick)="export($event)" (clearAll)="clear()"></app-report-toolbar>
+          <p class="drill-hint mb-2"><i class="fa fa-info-circle mr-1" aria-hidden="true"></i>Includes every pre-binning completed box — with or without pallet / location. Click a row to view its box, pallet and location details.</p>
+        </div>
+        <div>
+          <app-report-table [columns]="columns" [rows]="rows" [loading]="loading" [page]="page" [pageSize]="pageSize"
+            [totalRecords]="totalRecords" [totalPages]="totalPages" [sortBy]="sortBy" [sortDir]="sortDir" [totals]="totals"
+            [rowClickable]="true" (rowClick)="openDetails($event)"
+            (pageChange)="onPageChange($event)" (sortChange)="onSortChange($event)"></app-report-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Drill-down: location / pallet / box rows for the clicked warehouse + item -->
+<div *ngIf="detailOpen" class="detail-scrim" (click)="closeDetails()"></div>
+<div *ngIf="detailOpen" class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="stockDetailTitle">
+  <div class="detail-header">
+    <div class="detail-title-block">
+      <p class="detail-title" id="stockDetailTitle">
+        {{ selectedItem?.itemCode }}
+        <span class="detail-subtitle" *ngIf="selectedItem?.itemMaster?.itemName">— {{ selectedItem.itemMaster.itemName }}</span>
+      </p>
+      <div class="detail-chips">
+        <span class="detail-chip"><i class="fa fa-building-o mr-1" aria-hidden="true"></i>Warehouse: <b>{{ selectedItem?.warehouseCode }}</b></span>
+        <span class="detail-chip">Boxes: <b>{{ selectedItem?.boxCount }}</b></span>
+        <span class="detail-chip">Pallets: <b>{{ selectedItem?.palletCount }}</b></span>
+        <span class="detail-chip">Locations: <b>{{ selectedItem?.locationCount }}</b></span>
+        <span class="detail-chip">Pre-Binned: <b>{{ selectedItem?.preBinnedQty }}</b></span>
+        <span class="detail-chip">On Pallet: <b>{{ selectedItem?.palletMappedQty }}</b></span>
+        <span class="detail-chip">In Location: <b>{{ selectedItem?.inLocationQty }}</b></span>
+        <span class="detail-chip">Total Stock: <b>{{ selectedItem?.quantity }}</b></span>
+      </div>
+    </div>
+    <button class="button closesidebar" type="button" (click)="closeDetails()" aria-label="Close">
+      <span class="button-content" aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-stage-bar">
+      <label for="detailStage" class="mb-0 mr-2">Stage :</label>
+      <select id="detailStage" class="form-control detail-stage-select" [ngModel]="detailStage" (ngModelChange)="onDetailStageChange($event)">
+        <option value="">All</option>
+        <option *ngFor="let st of stages" [value]="st.value">{{ st.label }}</option>
+      </select>
+    </div>
+    <app-report-toolbar [searchValue]="detailSearch" [showFilter]="false"
+      searchPlaceholder="Search: Row, Location, Pallet ID, Box Number..."
+      (searchChange)="onDetailSearchChange($event)" (exportClick)="exportDetails($event)"
+      (clearAll)="clearDetailSearch()"></app-report-toolbar>
+
+    <app-report-table [columns]="detailColumns" [rows]="detailRows" [loading]="detailLoading" [page]="detailPage"
+      [pageSize]="detailPageSize" [totalRecords]="detailTotalRecords" [totalPages]="detailTotalPages"
+      [sortBy]="detailSortBy" [sortDir]="detailSortDir" [totals]="detailTotals"
+      (pageChange)="onDetailPageChange($event)" (sortChange)="onDetailSortChange($event)"></app-report-table>
+  </div>
+</div>
+
+<div *ngIf="flagset" class="dialog_scrim" (click)="falseSet()"></div>
+
+<section class="sidebar close sidebar_Request" id="sidebar">
+  <div class="container-fluid" [formGroup]="filterForm">
+    <div class="row d-inline">
+      <div class="justify-content-between align-items-center d-flex">
+        <div>
+          <p class="storage_filter">Warehouse Stock Report Filter</p>
+        </div>
+        <div>
+          <button class="button closesidebar" (click)="closesidebar()">
+            <span class="button-content" aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="warehouseCode">Warehouse :</label>
+        <app-search-select inputId="warehouseCode" formControlName="warehouseCode" [options]="warehouseOptions"
+          searchPlaceholder="Search warehouse name or code..."></app-search-select>
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="itemCode">Item Code :</label>
+        <input type="text" id="itemCode" class="form-control" formControlName="itemCode">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="itemName">Item Name :</label>
+        <input type="text" id="itemName" class="form-control" formControlName="itemName">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="itemGroup">Item Group :</label>
+        <input type="text" id="itemGroup" class="form-control" formControlName="itemGroup">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="category">Category :</label>
+        <input type="text" id="category" class="form-control" formControlName="category">
+      </div>
+
+      <div class="positionset p-2 py-3">
+        <label class="filter_label w-100" for="stage">Stage :</label>
+        <select id="stage" class="form-control" formControlName="stage">
+          <option value="">All</option>
+          <option *ngFor="let st of stages" [value]="st.value">{{ st.label }}</option>
+        </select>
+      </div>
+
+      <div class="positionset p-2 py-3 d-flex justify-content-end align-items-center">
+        <button class="button" (click)="searchData()">
+          <span class="button-content">Apply</span>
+        </button>
+        <button class="button ml-3" (click)="clear()">
+          <span class="button-content">Clear</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

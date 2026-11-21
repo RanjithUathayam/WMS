@@ -1,0 +1,24 @@
+<div class="ss-wrapper" [class.is-open]="open" [class.is-disabled]="disabled">
+  <button type="button" class="form-control ss-trigger" [id]="inputId" (click)="toggle()" [disabled]="disabled"
+    aria-haspopup="listbox" [attr.aria-expanded]="open">
+    <span class="ss-trigger-label" [class.ss-placeholder]="value === '' || value == null">{{ selectedLabel }}</span>
+    <i class="fa fa-chevron-down ss-caret" aria-hidden="true"></i>
+  </button>
+
+  <div class="ss-panel" *ngIf="open">
+    <div class="ss-search">
+      <i class="fa fa-search" aria-hidden="true"></i>
+      <input #searchBox type="text" [placeholder]="searchPlaceholder" [ngModel]="term"
+        (ngModelChange)="onTermChange($event)" (keydown)="onKeydown($event)" autocomplete="off">
+    </div>
+    <ul class="ss-list" role="listbox">
+      <li *ngFor="let opt of filtered; let i = index" class="ss-option" role="option"
+        [class.is-active]="i === activeIndex" [class.is-selected]="opt.value === value"
+        [attr.aria-selected]="opt.value === value"
+        (mouseenter)="activeIndex = i" (click)="select(opt)">
+        {{ opt.label }}
+      </li>
+      <li class="ss-empty" *ngIf="filtered.length === 0">No matches for "{{ term }}"</li>
+    </ul>
+  </div>
+</div>

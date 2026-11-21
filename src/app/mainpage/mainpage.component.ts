@@ -413,6 +413,10 @@ export class MainpageComponent implements OnInit {
       this.mySelectedTab = 'Transactions';
       this.selectedTab = 'inventory_details_report';
     }
+    if (this.router.url.includes('mainpage/warehouse_stock_report')) {
+      this.mySelectedTab = 'Transactions';
+      this.selectedTab = 'warehouse_stock_report';
+    }
 
     this.showSelectedTab(); // Ensure that the selected tab is highlighted
 

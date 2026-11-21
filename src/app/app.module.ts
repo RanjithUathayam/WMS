@@ -39,6 +39,8 @@ import { PreBinningReportComponent } from './pre-binning-report/pre-binning-repo
 import { PalletMappingReportComponent } from './pallet-mapping-report/pallet-mapping-report.component';
 import { LocationMappingReportComponent } from './location-mapping-report/location-mapping-report.component';
 import { InventoryDetailsReportComponent } from './inventory-details-report/inventory-details-report.component';
+import { WarehouseStockReportComponent } from './warehouse-stock-report/warehouse-stock-report.component';
+import { SearchSelectComponent } from './components/search-select/search-select.component';
 import { UserControlComponent } from './main/user-control/user-control.component';
 import { MainpageComponent } from './mainpage/mainpage.component';
 import { ItemComponent } from './item/item.component';
@@ -67,6 +69,8 @@ import { UserlogComponent } from './userlog/userlog.component';
     HhtDeviceRightsComponent,
     HomeComponent,
     InventoryDetailsReportComponent,
+    WarehouseStockReportComponent,
+    SearchSelectComponent,
     InventoryListComponent,
     ItemComponent,
     LabelPrintComponent,

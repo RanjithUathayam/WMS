@@ -6,7 +6,7 @@
   </div>
 
   <div class="toolbar-actions">
-    <button type="button" class="toolbar-btn filter-btn" [class.is-active]="activeFilterCount > 0" (click)="filterClick.emit()">
+    <button type="button" class="toolbar-btn filter-btn" *ngIf="showFilter" [class.is-active]="activeFilterCount > 0" (click)="filterClick.emit()">
       <i class="fa fa-filter" aria-hidden="true"></i>
       <span>Filter</span>
       <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>

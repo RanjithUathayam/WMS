@@ -13,6 +13,7 @@ export class ReportToolbarComponent implements OnDestroy {
   @Input() searchPlaceholder = 'Search...';
   @Input() searchValue = '';
   @Input() activeFilterCount = 0;
+  @Input() showFilter = true;
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() filterClick = new EventEmitter<void>();

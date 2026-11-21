@@ -1,0 +1,167 @@
+.storage_filter {
+  font-size: 1.3rem;
+  color: var(--report-primary);
+  font-weight: 600;
+}
+
+.filter_label {
+  font-size: 0.95rem;
+  color: var(--report-primary);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Slide-in filter panel — same rules as prebinning-summary.component.css (Angular's per-component
+   CSS scoping means these have to be repeated here, they don't apply from that other component). */
+.sidebar {
+  position: fixed;
+  top: 0px;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 25%;
+  background: var(--report-sidebar-bg);
+  z-index: 100;
+  transition: all 0.35s ease;
+  box-shadow: -4px 0 20px rgba(15, 42, 67, 0.18);
+  overflow-y: auto;
+}
+
+.sidebar.close {
+  width: 0px;
+  box-shadow: none;
+}
+
+.positionset {
+  border-bottom: 1px solid var(--report-border);
+  padding-bottom: 1rem !important;
+}
+
+.positionset .form-control {
+  border-radius: var(--report-radius-sm);
+  border: 1px solid var(--report-border);
+}
+
+.positionset .form-control:focus {
+  border-color: var(--report-primary-dark);
+  box-shadow: 0 0 0 3px rgba(1, 109, 176, 0.15);
+}
+
+.positionset:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0 !important;
+}
+
+.closesidebar {
+  padding: 0px !important;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.closesidebar:hover {
+  background: rgba(1, 141, 176, 0.12);
+}
+
+.closesidebar span {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.drill-hint {
+  font-size: 0.85rem;
+  color: var(--report-text);
+  opacity: 0.8;
+}
+
+/* Drill-down modal (location / pallet / box details for one warehouse + item) */
+.detail-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 42, 67, 0.45);
+  z-index: 1040;
+}
+
+.detail-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(1200px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--report-surface);
+  border-radius: var(--report-radius);
+  box-shadow: 0 12px 40px rgba(15, 42, 67, 0.35);
+  z-index: 1050;
+  overflow: hidden;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--report-sidebar-bg);
+  border-bottom: 1px solid var(--report-border);
+}
+
+.detail-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--report-primary);
+  margin: 0 0 8px;
+}
+
+.detail-subtitle {
+  font-weight: 500;
+  color: var(--report-text);
+}
+
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-chip {
+  font-size: 0.85rem;
+  color: var(--report-text);
+  background: var(--report-surface);
+  border: 1px solid var(--report-border);
+  border-radius: 999px;
+  padding: 3px 12px;
+}
+
+.detail-chip b {
+  color: var(--report-primary);
+}
+
+.detail-body {
+  padding: 12px 18px 16px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .sidebar:not(.close) {
+    width: 85%;
+  }
+}
+
+.detail-stage-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--report-primary);
+}
+
+.detail-stage-select {
+  width: auto;
+  min-width: 240px;
+  border-radius: var(--report-radius-sm);
+  border: 1px solid var(--report-border);
+}
