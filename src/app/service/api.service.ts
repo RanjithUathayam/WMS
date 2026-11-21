@@ -875,7 +875,14 @@ export class ApiService {
         const url = `${this.baseURL}reports/${apiCall}?${queryParams.toString()}`;
 
         return this.http.get(url, { headers: this.option, responseType: 'blob' as 'json' }).subscribe(
-            (response: Blob) => {
+            async (response: Blob) => {
+                // The API reports export failures as JSON (sometimes with a 2xx status) — never save that as a file.
+                if (response?.type?.includes('application/json')) {
+                    let body: any = {};
+                    try { body = JSON.parse(await response.text()); } catch { }
+                    if (onError) { onError({ error: { message: body?.message || 'Export failed.' } }); }
+                    return;
+                }
                 const blobUrl = window.URL.createObjectURL(response);
                 const a = document.createElement('a');
                 a.href = blobUrl;
